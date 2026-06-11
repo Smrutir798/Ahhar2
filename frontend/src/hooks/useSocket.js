@@ -6,7 +6,8 @@ const useSocket = (roomId, eventHandlers = {}) => {
 
   useEffect(() => {
     // Connect to Socket.io server
-    const newSocket = io('http://localhost:5000');
+    const SOCKET_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
+    const newSocket = io(SOCKET_URL);
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
