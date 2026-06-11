@@ -63,6 +63,43 @@ router.get('/executive', auth, async (req, res) => {
   }
 });
 
+// Service Analytics (for Customer Feedback BI)
+router.get('/services/:restaurantId', auth, async (req, res) => {
+  try {
+    const restaurantId = new mongoose.Types.ObjectId(req.params.restaurantId);
+    
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const totalRequests = await ServiceRequest.countDocuments({ restaurantId, createdAt: { $gte: startOfToday } });
+    const completedRequests = await ServiceRequest.countDocuments({ restaurantId, status: 'completed', createdAt: { $gte: startOfToday } });
+    
+    // Avg Response Time
+    const requests = await ServiceRequest.find({ restaurantId, completedAt: { $exists: true } });
+    let totalWaitTime = 0;
+    requests.forEach(r => totalWaitTime += (new Date(r.completedAt) - new Date(r.createdAt)));
+    const avgResponseTime = requests.length > 0 ? Math.round(totalWaitTime / requests.length / 60000) : 0;
+
+    // Customer Satisfaction
+    const feedbacks = await Feedback.find({ restaurantId });
+    let customerSatisfaction = 0;
+    if (feedbacks.length > 0) {
+      const sum = feedbacks.reduce((acc, f) => acc + f.foodRating + f.serviceRating + f.cleanlinessRating, 0);
+      customerSatisfaction = (sum / (feedbacks.length * 3)).toFixed(1);
+    }
+
+    res.json({
+      totalRequests,
+      completedRequests,
+      avgResponseTime,
+      customerSatisfaction
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Revenue Analytics
 router.get('/revenue', auth, async (req, res) => {
   try {

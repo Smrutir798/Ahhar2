@@ -60,19 +60,15 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    // allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    // In production, you'd want to check against process.env.CORS_ORIGIN
-    // For development, we allow the requesting origin
-    const allowedOrigin = process.env.CORS_ORIGIN || origin;
-    callback(null, allowedOrigin);
-  },
-  credentials: true,
-};
-app.use(cors(corsOptions));
+app.use(
+  cors({
+    origin: [
+      "https://thinkdifferent.vercel.app",
+      "http://localhost:5173"
+    ],
+    credentials: true
+  })
+);
 app.use(express.json());
 
 // Database connection

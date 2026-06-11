@@ -65,6 +65,9 @@ router.post('/session/create', async (req, res) => {
     // Mark table as occupied
     await Table.findByIdAndUpdate(tableId, { status: 'occupied' });
     
+    const io = socket.getIO();
+    io.to(restaurantId.toString()).emit('table-occupied', { tableId });
+    
     res.status(201).json(session);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
