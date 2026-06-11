@@ -77,7 +77,7 @@ const KitchenDashboard = () => {
     <div className="bg-gray-800 rounded-lg p-4 mb-3 border border-gray-700 shadow-md flex flex-col">
       <div className="flex justify-between items-start mb-3 border-b border-gray-700 pb-2">
         <div>
-          <h3 className="font-bold text-white text-lg">Table {order.tableId.tableNumber || '?'}</h3>
+          <h3 className="font-bold text-white text-lg">Table {order.tableId?.tableNumber || '?'}</h3>
           <p className="text-xs text-gray-400">{order.orderNumber}</p>
         </div>
         <div className="flex items-center gap-1 text-orange-400 bg-orange-400/10 px-2 py-1 rounded text-xs font-bold">

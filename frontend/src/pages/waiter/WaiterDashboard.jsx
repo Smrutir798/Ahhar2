@@ -82,7 +82,6 @@ const WaiterDashboard = () => {
     .sort((a, b) => (priority[a.requestType] || 99) - (priority[b.requestType] || 99));
     
   const activeRequests = requests.filter(r => r.status === 'accepted');
-  const completedRequests = requests.filter(r => r.status === 'completed').slice(0, 10); // Show only last 10 completed
 
   const KanbanColumn = ({ title, items, colorClass }) => (
     <div className={`flex flex-col bg-gray-50 rounded-xl border border-gray-200 h-[calc(100vh-140px)] overflow-hidden ${colorClass}`}>
@@ -140,11 +139,6 @@ const WaiterDashboard = () => {
                     <CheckCircle2 size={16} /> Mark Completed
                   </button>
                 )}
-                {req.status === 'completed' && (
-                  <div className="flex-1 text-center text-sm font-bold text-gray-400 py-1">
-                    Completed at {new Date(req.completedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                )}
               </div>
             </div>
           ))
@@ -162,10 +156,9 @@ const WaiterDashboard = () => {
         <p className="text-gray-500 text-sm">Manage incoming table service requests</p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <KanbanColumn title="Pending" items={pendingRequests} colorClass="border-t-4 border-t-orange-400" />
         <KanbanColumn title="Active (Accepted)" items={activeRequests} colorClass="border-t-4 border-t-blue-400" />
-        <KanbanColumn title="Completed" items={completedRequests} colorClass="border-t-4 border-t-green-400" />
       </div>
     </div>
   );

@@ -22,17 +22,14 @@ const RecipeManager = () => {
   const fetchData = async () => {
     try {
       const token = localStorage.getItem('token');
-      // For menu items, we can fetch categories which include items
-      const userRes = await axios.get('/auth/me', { headers: { Authorization: `Bearer ${token}` } });
-      const ownerId = userRes.data.role === 'owner' ? userRes.data._id : userRes.data.restaurantId;
       
       const [recRes, menuRes, invRes] = await Promise.all([
         axios.get('/recipes', { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`/customer/menu/${ownerId}`),
+        axios.get('/menu', { headers: { Authorization: `Bearer ${token}` } }),
         axios.get('/inventory', { headers: { Authorization: `Bearer ${token}` } })
       ]);
       setRecipes(recRes.data);
-      setMenuItems(menuRes.data.items);
+      setMenuItems(menuRes.data);
       setIngredients(invRes.data);
     } catch (err) {
       console.error('Failed to fetch recipe data', err);

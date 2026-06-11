@@ -45,7 +45,6 @@ const DashboardLayout = () => {
     { name: 'Purchase Orders', path: '/purchase-orders', icon: <ClipboardList className="h-5 w-5" />, roles: ['admin', 'owner', 'inventory_manager'] },
     { name: 'Recipe Maps', path: '/recipes', icon: <ChefHat className="h-5 w-5" />, roles: ['admin', 'owner', 'inventory_manager'] },
     { name: 'Stock Analytics', path: '/inventory-analytics', icon: <BarChart3 className="h-5 w-5" />, roles: ['admin', 'owner', 'inventory_manager'] },
-    { name: 'Service Analytics', path: '/service-analytics', icon: <Activity className="h-5 w-5" />, roles: ['admin', 'owner'] },
     { name: 'Categories', path: '/categories', icon: <MenuSquare className="h-5 w-5" />, roles: ['admin', 'owner'] },
     { name: 'Settings', path: '/profile', icon: <Settings className="h-5 w-5" />, roles: ['admin', 'owner'] },
   ];
@@ -90,10 +89,13 @@ const DashboardLayout = () => {
       <div className="flex flex-col flex-1 overflow-hidden">
         <header className="flex h-14 items-center gap-4 border-b bg-background/60 backdrop-blur-md px-4 lg:h-[60px] lg:px-6 justify-between sm:justify-end sticky top-0 z-10 shadow-sm transition-all duration-300">
           <div className="sm:hidden font-bold font-heading text-lg text-primary">{restaurantName}</div>
-          <div className="flex items-center gap-4 cursor-pointer group">
-            <div className="text-sm font-medium group-hover:text-primary transition-colors">{user?.name}</div>
-            <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-primary to-purple-500 flex items-center justify-center text-white font-bold shadow-md group-hover:scale-110 transition-transform duration-300">
-              {user?.name?.charAt(0).toUpperCase()}
+          <div className="flex items-center gap-4">
+            <ServiceNotifications />
+            <div className="flex items-center gap-3 cursor-pointer group">
+              <div className="text-sm font-medium group-hover:text-primary transition-colors">{user?.name}</div>
+              <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-primary to-purple-500 flex items-center justify-center text-white font-bold shadow-md group-hover:scale-110 transition-transform duration-300">
+                {user?.name?.charAt(0).toUpperCase()}
+              </div>
             </div>
           </div>
         </header>
@@ -101,7 +103,6 @@ const DashboardLayout = () => {
           <Outlet />
         </main>
       </div>
-      <ServiceNotifications />
     </div>
   );
 };

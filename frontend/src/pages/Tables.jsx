@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from '@/lib/axios';
+import { AuthContext } from '../context/AuthContext';
+import useSocket from '../hooks/useSocket';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 
 const Tables = () => {
+  const { user } = useContext(AuthContext);
   const [tables, setTables] = useState([]);
   const [newTable, setNewTable] = useState({ tableNumber: '', capacity: '' });
   
@@ -22,6 +25,23 @@ const Tables = () => {
     fetchTables();
   }, []);
 
+  // Listen for live table status updates
+  useSocket({ type: 'restaurant', id: user?.restaurantId || user?._id }, {
+    'table-occupied': ({ tableId }) => {
+      setTables(prev => prev.map(t => t._id === tableId ? { ...t, status: 'occupied' } : t));
+    },
+    'new-bill': (newBill) => {
+      // when bill is generated, table status changes to billing
+      setTables(prev => prev.map(t => t._id === newBill.tableId ? { ...t, status: 'billing' } : t));
+    },
+    'bill-paid': (paidBill) => {
+      // when bill is paid, table status changes to available
+      // Check if tableId is an object (populated) or just an ID string
+      const tId = paidBill.tableId._id || paidBill.tableId;
+      setTables(prev => prev.map(t => t._id === tId ? { ...t, status: 'available' } : t));
+    }
+  });
+
   const handleAddTable = async (e) => {
     e.preventDefault();
     try {
@@ -37,11 +57,13 @@ const Tables = () => {
   };
 
   const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this table?")) return;
     try {
       await axios.delete(`/tables/${id}`);
       fetchTables();
     } catch (err) {
       console.error('Failed to delete table', err);
+      alert('Failed to delete table: ' + (err.response?.data?.message || err.message));
     }
   };
 
@@ -84,7 +106,7 @@ const Tables = () => {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-slide-up" style={{ animationDelay: '200ms' }}>
         {tables.map(table => (
           <Card key={table._id} className="overflow-hidden glass card-hover shadow-md relative group">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
             <CardHeader className="bg-muted/30 pb-4 border-b border-white/5 backdrop-blur-sm z-10 relative">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-lg">Table {table.tableNumber}</CardTitle>

@@ -20,7 +20,9 @@ const ServiceNotifications = () => {
         const res = await axios.get('/services', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setRequests(res.data);
+        // Only show pending or accepted requests in the notification bell
+        const activeRequests = res.data.filter(req => req.status !== 'completed');
+        setRequests(activeRequests);
       } catch (err) {
         console.error('Failed to fetch service requests', err);
       }
