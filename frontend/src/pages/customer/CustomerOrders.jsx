@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/Button';
 const CustomerOrders = () => {
   const { tableId } = useParams();
   const navigate = useNavigate();
-  const { session } = useContext(CartContext);
+  const { session, setSession } = useContext(CartContext);
   
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -114,6 +114,7 @@ const CustomerOrders = () => {
         ...feedbackData
       });
       setShowFeedback(false);
+      setSession(null); // Clear session so table resets
       navigate(`/menu/table/${tableId}`); // Return to menu fresh
     } catch (err) {
       alert("Failed to submit feedback");
@@ -364,7 +365,10 @@ const CustomerOrders = () => {
             <Button onClick={submitFeedback} className="w-full mt-8 rounded-full py-6 text-lg shadow-lg shadow-primary/30">
               Submit Feedback
             </Button>
-            <button onClick={() => navigate(`/menu/table/${tableId}`)} className="w-full mt-4 text-gray-500 font-bold text-sm">
+            <button onClick={() => {
+              setSession(null);
+              navigate(`/menu/table/${tableId}`);
+            }} className="w-full mt-4 text-gray-500 font-bold text-sm">
               Skip for now
             </button>
           </div>
