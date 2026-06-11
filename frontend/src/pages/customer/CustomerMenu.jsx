@@ -73,16 +73,16 @@ const CustomerMenu = () => {
   if (!table) return <div className="flex-1 flex items-center justify-center">Invalid Table QR Code</div>;
 
   return (
-    <div className="flex flex-col flex-1 bg-gray-50 pb-24">
+    <div className="flex flex-col flex-1 bg-transparent pb-24 text-foreground">
       {/* Header */}
-      <div className="bg-white px-4 py-4 sticky top-0 z-10 shadow-sm">
+      <div className="bg-card/40 backdrop-blur-xl border-b border-border/40 px-4 py-4 sticky top-0 z-10 shadow-lg">
         <div className="flex justify-between items-center mb-3">
           <div>
-            <h1 className="text-xl font-bold text-gray-900">{restaurant?.name}</h1>
-            <p className="text-sm text-gray-500 font-medium">Table {table?.tableNumber}</p>
+            <h1 className="text-xl font-bold font-heading bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground/90 to-foreground/50">{restaurant?.name}</h1>
+            <p className="text-sm text-muted-foreground font-medium font-sans">Table {table?.tableNumber}</p>
           </div>
           <button 
-            className="p-2 bg-gray-100 rounded-full text-gray-700 relative flex items-center gap-2"
+            className="p-2 bg-foreground/5 hover:bg-foreground/10 active:scale-95 rounded-full text-foreground relative flex items-center gap-2 transition-all duration-300 border border-border"
             onClick={() => navigate(`/menu/table/${tableId}/history`)}
           >
             <ReceiptText size={20} />
@@ -91,11 +91,11 @@ const CustomerMenu = () => {
         
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+          <Search className="absolute left-3 top-2.5 text-muted-foreground" size={18} />
           <input 
             type="text" 
             placeholder="Search food..." 
-            className="w-full bg-gray-100 border-none rounded-xl pl-10 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-primary outline-none"
+            className="w-full bg-foreground/5 border border-border text-foreground rounded-xl pl-10 pr-4 py-2.5 text-sm focus:bg-foreground/10 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all duration-300 placeholder:text-muted-foreground/50"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -103,9 +103,9 @@ const CustomerMenu = () => {
       </div>
 
       {/* Categories */}
-      <div className="bg-white border-b overflow-x-auto whitespace-nowrap px-4 py-3 sticky top-[110px] z-10 hide-scrollbar">
+      <div className="bg-card/20 backdrop-blur-lg border-b border-border/40 overflow-x-auto whitespace-nowrap px-4 py-3 sticky top-[120px] z-10 hide-scrollbar">
         <button 
-          className={`inline-block px-5 py-2 rounded-full text-sm font-medium mr-2 transition-colors ${activeCategory === 'All' ? 'bg-primary text-white shadow-md' : 'bg-gray-100 text-gray-600'}`}
+          className={`inline-block px-5 py-2 rounded-full text-sm font-medium mr-2 transition-all duration-300 ${activeCategory === 'All' ? 'bg-foreground text-background shadow-md shadow-foreground/10 scale-105 font-semibold' : 'bg-foreground/5 text-muted-foreground hover:bg-foreground/10'}`}
           onClick={() => setActiveCategory('All')}
         >
           All
@@ -113,7 +113,7 @@ const CustomerMenu = () => {
         {categories.map(cat => (
           <button 
             key={cat._id}
-            className={`inline-block px-5 py-2 rounded-full text-sm font-medium mr-2 transition-colors ${activeCategory === cat._id ? 'bg-primary text-white shadow-md' : 'bg-gray-100 text-gray-600'}`}
+            className={`inline-block px-5 py-2 rounded-full text-sm font-medium mr-2 transition-all duration-300 ${activeCategory === cat._id ? 'bg-foreground text-background shadow-md shadow-foreground/10 scale-105 font-semibold' : 'bg-foreground/5 text-muted-foreground hover:bg-foreground/10'}`}
             onClick={() => setActiveCategory(cat._id)}
           >
             {cat.name}
@@ -124,36 +124,41 @@ const CustomerMenu = () => {
       {/* Menu Items */}
       <div className="p-4 flex flex-col gap-4">
         {filteredItems.map(item => (
-          <div key={item._id} className="bg-white p-3 rounded-2xl shadow-sm flex gap-4 cursor-pointer active:scale-[0.98] transition-transform" onClick={() => handleOpenItem(item)}>
-            <div className="w-24 h-24 bg-gray-200 rounded-xl flex-shrink-0 overflow-hidden">
+          <div 
+            key={item._id} 
+            className="bg-card/30 border border-border p-3 rounded-2xl shadow-sm flex gap-4 cursor-pointer active:scale-[0.98] hover:border-foreground/30 hover:-translate-y-0.5 transition-all duration-300"
+            onClick={() => handleOpenItem(item)}
+          >
+            <div className="w-24 h-24 bg-foreground/5 border border-border/40 rounded-xl flex-shrink-0 overflow-hidden relative">
               {item.image ? (
                 <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs text-center px-1">No Image</div>
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground/60 text-xs text-center px-1">No Image</div>
               )}
             </div>
             <div className="flex-1 flex flex-col justify-between py-1">
               <div>
-                <h3 className="font-bold text-gray-900">{item.name}</h3>
-                <p className="text-xs text-gray-500 line-clamp-2 mt-1">{item.description}</p>
+                <h3 className="font-bold text-foreground font-heading text-base">{item.name}</h3>
+                <p className="text-xs text-muted-foreground line-clamp-2 mt-1 font-sans">{item.description}</p>
               </div>
               <div className="flex justify-between items-center mt-2">
-                <span className="font-bold text-primary">₹{item.price}</span>
-                <button 
-                  className="bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-bold active:bg-primary/20"
+                <span className="font-bold text-foreground font-heading text-base">₹{item.price}</span>
+                <Button 
+                  size="sm"
+                  className="rounded-full px-4 py-1 h-8 font-bold border-none"
                   onClick={(e) => {
                     e.stopPropagation();
                     addToCart(item, 1, '');
                   }}
                 >
                   Add
-                </button>
+                </Button>
               </div>
             </div>
           </div>
         ))}
         {filteredItems.length === 0 && (
-          <div className="text-center text-gray-500 mt-10">No items found.</div>
+          <div className="text-center text-muted-foreground mt-10">No items found.</div>
         )}
       </div>
 
@@ -161,12 +166,12 @@ const CustomerMenu = () => {
       {cartCount > 0 && (
         <div className="fixed bottom-6 left-0 right-0 px-4 flex justify-center z-20">
           <button 
-            className="w-full max-w-sm bg-primary text-white rounded-full p-4 font-bold flex justify-between items-center shadow-lg shadow-primary/30"
+            className="w-full max-w-sm bg-foreground text-background rounded-full p-4 font-bold flex justify-between items-center shadow-xl shadow-foreground/10 hover:scale-[1.02] active:scale-95 transition-all duration-300 border border-border"
             onClick={() => navigate(`/menu/table/${tableId}/cart`)}
           >
             <div className="flex items-center gap-2">
-              <span className="bg-white/20 px-2 py-0.5 rounded-full text-sm">{cartCount}</span>
-              <span>View Cart</span>
+              <span className="bg-background text-foreground px-2 py-0.5 rounded-full text-sm">{cartCount}</span>
+              <span className="font-heading">View Cart</span>
             </div>
             <ShoppingBag size={20} />
           </button>
@@ -175,31 +180,31 @@ const CustomerMenu = () => {
 
       {/* Item Details Modal */}
       {selectedItem && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex flex-col justify-end">
-          <div className="bg-white rounded-t-3xl w-full max-w-md mx-auto max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom">
-            <div className="relative h-56 bg-gray-200 flex-shrink-0">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex flex-col justify-end">
+          <div className="bg-card border border-border rounded-t-3xl w-full max-w-md mx-auto max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom">
+            <div className="relative h-56 bg-foreground/5 flex-shrink-0">
               {selectedItem.image && (
                 <img src={selectedItem.image} alt={selectedItem.name} className="w-full h-full object-cover" />
               )}
               <button 
-                className="absolute top-4 right-4 bg-white/80 p-2 rounded-full backdrop-blur-sm"
+                className="absolute top-4 right-4 bg-background/80 p-2 rounded-full backdrop-blur-sm text-foreground border border-border active:scale-95 transition-all"
                 onClick={() => setSelectedItem(null)}
               >
-                <X size={20} className="text-gray-900" />
+                <X size={20} />
               </button>
             </div>
             
             <div className="p-6 flex-1 overflow-auto">
               <div className="flex justify-between items-start">
-                <h2 className="text-2xl font-bold text-gray-900">{selectedItem.name}</h2>
-                <span className="text-xl font-bold text-primary">₹{selectedItem.price}</span>
+                <h2 className="text-2xl font-bold text-foreground font-heading">{selectedItem.name}</h2>
+                <span className="text-xl font-bold text-foreground font-heading">₹{selectedItem.price}</span>
               </div>
-              <p className="text-gray-500 mt-2 text-sm">{selectedItem.description}</p>
+              <p className="text-muted-foreground mt-2 text-sm font-sans">{selectedItem.description}</p>
               
               <div className="mt-6">
-                <label className="block text-sm font-bold text-gray-900 mb-2">Special Instructions</label>
+                <label className="block text-sm font-bold text-foreground mb-2 font-heading">Special Instructions</label>
                 <textarea 
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
+                  className="w-full bg-foreground/5 border border-border text-foreground rounded-xl p-3 text-sm outline-none focus:border-foreground focus:ring-1 focus:ring-foreground transition-all resize-none"
                   rows="3"
                   placeholder="e.g., Make it spicy, no onions..."
                   value={instructions}
@@ -208,24 +213,24 @@ const CustomerMenu = () => {
               </div>
 
               <div className="mt-8 flex items-center justify-between">
-                <div className="flex items-center gap-4 bg-gray-100 rounded-full p-1.5">
+                <div className="flex items-center gap-4 bg-foreground/5 rounded-full p-1.5 border border-border">
                   <button 
-                    className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-gray-900 disabled:opacity-50"
+                    className="w-10 h-10 bg-background hover:bg-foreground/10 active:scale-95 rounded-full flex items-center justify-center shadow-sm text-foreground disabled:opacity-50 transition-all border border-border"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     disabled={quantity <= 1}
                   >
                     <Minus size={18} />
                   </button>
-                  <span className="font-bold w-4 text-center">{quantity}</span>
+                  <span className="font-bold w-4 text-center text-foreground">{quantity}</span>
                   <button 
-                    className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-gray-900"
+                    className="w-10 h-10 bg-background hover:bg-foreground/10 active:scale-95 rounded-full flex items-center justify-center shadow-sm text-foreground transition-all border border-border"
                     onClick={() => setQuantity(quantity + 1)}
                   >
                     <Plus size={18} />
                   </button>
                 </div>
                 
-                <Button className="rounded-full px-8 h-12 bg-primary text-white shadow-md shadow-primary/20" onClick={handleAddToCart}>
+                <Button className="rounded-full px-8 h-12 shadow-md shadow-foreground/10" onClick={handleAddToCart}>
                   Add Item • ₹{selectedItem.price * quantity}
                 </Button>
               </div>

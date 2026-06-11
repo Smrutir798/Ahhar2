@@ -2,7 +2,9 @@ import React, { useEffect, useState, useContext } from 'react';
 import axios from '@/lib/axios';
 import useSocket from '../../hooks/useSocket';
 import { AuthContext } from '../../context/AuthContext';
-import { Bell, Clock, ChefHat, CheckCircle2, User } from 'lucide-react';
+import { Bell, Clock, ChefHat, CheckCircle2, User, Volume2, VolumeX } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 
 const formatTimeAgo = (dateString) => {
   const diffInMinutes = Math.floor((new Date() - new Date(dateString)) / 60000);
@@ -15,13 +17,48 @@ const KitchenDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState({ pending: 0, preparing: 0, ready: 0, today: 0 });
 
-  // Add a generic beep sound (Data URI for simple sine wave or use a CDN audio)
-  const beepSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+  const [isAudioUnlocked, setIsAudioUnlocked] = useState(false);
+
+  // Synthesized double-tone chime using Web Audio API to bypass external dependencies and resolve browser autoplay issues
+  const playChime = () => {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+
+      const playTone = (freq, startTime, duration) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, startTime);
+        
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.linearRampToValueAtTime(0.2, startTime + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration - 0.02);
+        
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+      };
+
+      const now = ctx.currentTime;
+      playTone(587.33, now, 0.12); // D5 chime
+      playTone(880.00, now + 0.12, 0.25); // A5 chime
+      setIsAudioUnlocked(true);
+    } catch (e) {
+      console.log('Audio playback blocked or failed', e);
+    }
+  };
 
   // Socket logic
   useSocket({ type: 'restaurant', id: user?.restaurantId }, {
     'new-order': (newOrder) => {
-      beepSound.play().catch(e => console.log('Audio play failed', e));
+      playChime();
       setOrders(prev => [...prev, newOrder]);
     },
     'order-updated': (updatedOrder) => {
@@ -74,13 +111,13 @@ const KitchenDashboard = () => {
   };
 
   const OrderCard = ({ order }) => (
-    <div className="bg-gray-800 rounded-lg p-4 mb-3 border border-gray-700 shadow-md flex flex-col">
-      <div className="flex justify-between items-start mb-3 border-b border-gray-700 pb-2">
+    <Card className="p-4 mb-3 flex flex-col hover:border-foreground/30 hover:shadow-lg transition-all duration-300">
+      <div className="flex justify-between items-start mb-3 border-b border-border/10 pb-2">
         <div>
-          <h3 className="font-bold text-white text-lg">Table {order.tableId?.tableNumber || '?'}</h3>
-          <p className="text-xs text-gray-400">{order.orderNumber}</p>
+          <h3 className="font-bold font-heading text-foreground text-lg">Table {order.tableId?.tableNumber || '?'}</h3>
+          <p className="text-xs text-muted-foreground">{order.orderNumber}</p>
         </div>
-        <div className="flex items-center gap-1 text-orange-400 bg-orange-400/10 px-2 py-1 rounded text-xs font-bold">
+        <div className="flex items-center gap-1.5 text-foreground/80 bg-foreground/5 border border-border/20 px-2.5 py-1 rounded-lg text-xs font-semibold">
           <Clock size={12} />
           {formatTimeAgo(order.createdAt)}
         </div>
@@ -88,13 +125,17 @@ const KitchenDashboard = () => {
       
       <div className="flex-1 space-y-2 mb-4">
         {order.items.map((item, idx) => (
-          <div key={idx} className="flex justify-between text-sm">
-            <div className="flex gap-2 text-gray-200">
-              <span className="font-bold">{item.quantity}x</span>
-              <span>{item.name}</span>
+          <div key={idx} className="flex flex-col text-sm">
+            <div className="flex justify-between w-full text-foreground/90">
+              <div className="flex gap-2">
+                <span className="font-bold text-foreground">{item.quantity}x</span>
+                <span className="font-medium">{item.name}</span>
+              </div>
             </div>
             {item.instructions && (
-              <p className="text-xs text-red-400 mt-0.5 ml-6">Note: {item.instructions}</p>
+              <p className="text-xs text-destructive bg-destructive/5 border border-destructive/10 rounded-md px-2 py-1 mt-1 ml-6 max-w-full break-words">
+                Note: {item.instructions}
+              </p>
             )}
           </div>
         ))}
@@ -102,97 +143,166 @@ const KitchenDashboard = () => {
 
       <div className="mt-auto flex gap-2">
         {order.status === 'pending' && (
-          <button onClick={() => updateStatus(order._id, 'accepted')} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded">
+          <Button onClick={() => updateStatus(order._id, 'accepted')} className="flex-1 font-semibold">
             Accept
-          </button>
+          </Button>
         )}
         {order.status === 'accepted' && (
-          <button onClick={() => updateStatus(order._id, 'preparing')} className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 rounded">
+          <Button onClick={() => updateStatus(order._id, 'preparing')} className="flex-1 font-semibold">
             Start Cooking
-          </button>
+          </Button>
         )}
         {order.status === 'preparing' && (
-          <button onClick={() => updateStatus(order._id, 'ready')} className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded">
+          <Button onClick={() => updateStatus(order._id, 'ready')} className="flex-1 font-semibold">
             Mark Ready
-          </button>
+          </Button>
         )}
         {order.status === 'ready' && (
-          <button onClick={() => updateStatus(order._id, 'served')} className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 rounded">
+          <Button onClick={() => updateStatus(order._id, 'served')} variant="outline" className="flex-1 font-semibold">
             Mark Served
-          </button>
+          </Button>
         )}
       </div>
-    </div>
+    </Card>
   );
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col font-sans">
-      {/* Header */}
-      <header className="bg-gray-950 border-b border-gray-800 p-4 flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <ChefHat className="text-primary" size={28} />
-          <h1 className="text-xl font-bold">Kitchen Display System</h1>
-        </div>
-        
-        <div className="flex gap-4">
-          <div className="flex gap-3 text-sm">
-            <div className="bg-gray-800 px-3 py-1.5 rounded border border-gray-700">Pending <span className="font-bold text-blue-400">{stats.pending}</span></div>
-            <div className="bg-gray-800 px-3 py-1.5 rounded border border-gray-700">Preparing <span className="font-bold text-orange-400">{stats.preparing}</span></div>
-            <div className="bg-gray-800 px-3 py-1.5 rounded border border-gray-700">Ready <span className="font-bold text-green-400">{stats.ready}</span></div>
-          </div>
-          <button onClick={logout} className="bg-red-500/10 text-red-400 hover:bg-red-500/20 px-4 py-1.5 rounded font-bold transition-colors">
-            Logout
-          </button>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans relative overflow-hidden">
+      {/* Background blobs for premium glassmorphism */}
+      <div className="bg-blobs">
+        <div className="bg-blob-1"></div>
+        <div className="bg-blob-2"></div>
+        <div className="bg-blob-3"></div>
+      </div>
 
-      {/* Kanban Board */}
-      <div className="flex-1 p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 overflow-hidden h-[calc(100vh-73px)]">
-        
-        {/* Pending Column */}
-        <div className="flex flex-col h-full">
-          <div className="bg-blue-500/10 border border-blue-500/20 rounded-t-lg p-3 mb-2 flex justify-between items-center">
-            <h2 className="font-bold text-blue-400 flex items-center gap-2"><Bell size={18}/> Pending</h2>
-            <span className="bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded text-xs font-bold">{stats.pending}</span>
+      {/* Main content, relative & z-10 so it overlays the blobs */}
+      <div className="relative z-10 flex flex-col flex-1 h-screen overflow-hidden">
+        {/* Header */}
+        <header className="border-b border-border/20 bg-card/40 backdrop-blur-md px-6 py-4 flex justify-between items-center shadow-lg transition-all duration-300">
+          <div className="flex items-center gap-3">
+            <ChefHat className="text-foreground" size={28} />
+            <h1 className="text-xl font-bold font-heading tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground/90 to-foreground/55">
+              Kitchen Display System
+            </h1>
           </div>
-          <div className="flex-1 overflow-y-auto pr-1 pb-4">
-            {orders.filter(o => o.status === 'pending').map(order => <OrderCard key={order._id} order={order} />)}
+          
+          <div className="flex items-center gap-4">
+            <div className="flex gap-2 text-xs font-semibold">
+              <div className="glass border border-border/20 px-3 py-1.5 rounded-xl flex items-center gap-2">
+                <span className="text-muted-foreground">Pending</span>
+                <span className="bg-foreground text-background font-bold px-1.5 py-0.5 rounded-md text-[10px] min-w-4 text-center">
+                  {stats.pending}
+                </span>
+              </div>
+              <div className="glass border border-border/20 px-3 py-1.5 rounded-xl flex items-center gap-2">
+                <span className="text-muted-foreground">Preparing</span>
+                <span className="bg-foreground text-background font-bold px-1.5 py-0.5 rounded-md text-[10px] min-w-4 text-center">
+                  {stats.preparing}
+                </span>
+              </div>
+              <div className="glass border border-border/20 px-3 py-1.5 rounded-xl flex items-center gap-2">
+                <span className="text-muted-foreground">Ready</span>
+                <span className="bg-foreground text-background font-bold px-1.5 py-0.5 rounded-md text-[10px] min-w-4 text-center">
+                  {stats.ready}
+                </span>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={playChime}
+              className={`font-semibold flex items-center gap-2 transition-all duration-300 ${
+                isAudioUnlocked 
+                  ? 'border-emerald-500/20 text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10' 
+                  : 'border-amber-500/20 text-amber-500 bg-amber-500/5 hover:bg-amber-500/10 animate-pulse'
+              }`}
+            >
+              {isAudioUnlocked ? (
+                <>
+                  <Volume2 size={16} />
+                  <span>Sound Active</span>
+                </>
+              ) : (
+                <>
+                  <VolumeX size={16} />
+                  <span>Enable Audio Alerts</span>
+                </>
+              )}
+            </Button>
+            <Button variant="outline" size="sm" onClick={logout} className="font-heading hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all duration-300">
+              Logout
+            </Button>
           </div>
-        </div>
+        </header>
 
-        {/* Accepted/Preparing Column */}
-        <div className="flex flex-col h-full">
-          <div className="bg-orange-500/10 border border-orange-500/20 rounded-t-lg p-3 mb-2 flex justify-between items-center">
-            <h2 className="font-bold text-orange-400 flex items-center gap-2"><ChefHat size={18}/> Preparing</h2>
-            <span className="bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded text-xs font-bold">{stats.preparing}</span>
+        {/* Kanban Board */}
+        <div className="flex-1 p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 overflow-hidden h-[calc(100vh-73px)]">
+          
+          {/* Pending Column */}
+          <div className="flex flex-col h-full overflow-hidden">
+            <div className="glass border border-border/20 rounded-2xl p-4 mb-3 flex justify-between items-center shadow-md">
+              <h2 className="font-bold font-heading text-foreground flex items-center gap-2">
+                <Bell size={18} className="text-foreground/80 animate-pulse" /> Pending
+              </h2>
+              <span className="bg-foreground text-background px-2.5 py-0.5 rounded-full text-xs font-bold shadow-sm">
+                {stats.pending}
+              </span>
+            </div>
+            <div className="flex-1 overflow-y-auto pr-1 pb-4 space-y-3 scrollbar-thin scrollbar-thumb-border">
+              {orders.filter(o => o.status === 'pending').map(order => (
+                <OrderCard key={order._id} order={order} />
+              ))}
+            </div>
           </div>
-          <div className="flex-1 overflow-y-auto pr-1 pb-4">
-            {orders.filter(o => o.status === 'accepted' || o.status === 'preparing').map(order => <OrderCard key={order._id} order={order} />)}
-          </div>
-        </div>
 
-        {/* Ready Column */}
-        <div className="flex flex-col h-full">
-          <div className="bg-green-500/10 border border-green-500/20 rounded-t-lg p-3 mb-2 flex justify-between items-center">
-            <h2 className="font-bold text-green-400 flex items-center gap-2"><CheckCircle2 size={18}/> Ready</h2>
-            <span className="bg-green-500/20 text-green-400 px-2 py-0.5 rounded text-xs font-bold">{stats.ready}</span>
+          {/* Accepted/Preparing Column */}
+          <div className="flex flex-col h-full overflow-hidden">
+            <div className="glass border border-border/20 rounded-2xl p-4 mb-3 flex justify-between items-center shadow-md">
+              <h2 className="font-bold font-heading text-foreground flex items-center gap-2">
+                <ChefHat size={18} className="text-foreground/80" /> Preparing
+              </h2>
+              <span className="bg-foreground text-background px-2.5 py-0.5 rounded-full text-xs font-bold shadow-sm">
+                {stats.preparing}
+              </span>
+            </div>
+            <div className="flex-1 overflow-y-auto pr-1 pb-4 space-y-3 scrollbar-thin scrollbar-thumb-border">
+              {orders.filter(o => o.status === 'accepted' || o.status === 'preparing').map(order => (
+                <OrderCard key={order._id} order={order} />
+              ))}
+            </div>
           </div>
-          <div className="flex-1 overflow-y-auto pr-1 pb-4">
-            {orders.filter(o => o.status === 'ready').map(order => <OrderCard key={order._id} order={order} />)}
-          </div>
-        </div>
 
-        {/* Served Column (Recent) */}
-        <div className="flex flex-col h-full opacity-60">
-          <div className="bg-gray-500/10 border border-gray-500/20 rounded-t-lg p-3 mb-2 flex justify-between items-center">
-            <h2 className="font-bold text-gray-400 flex items-center gap-2"><User size={18}/> Served (History hidden)</h2>
+          {/* Ready Column */}
+          <div className="flex flex-col h-full overflow-hidden">
+            <div className="glass border border-border/20 rounded-2xl p-4 mb-3 flex justify-between items-center shadow-md">
+              <h2 className="font-bold font-heading text-foreground flex items-center gap-2">
+                <CheckCircle2 size={18} className="text-foreground/80" /> Ready
+              </h2>
+              <span className="bg-foreground text-background px-2.5 py-0.5 rounded-full text-xs font-bold shadow-sm">
+                {stats.ready}
+              </span>
+            </div>
+            <div className="flex-1 overflow-y-auto pr-1 pb-4 space-y-3 scrollbar-thin scrollbar-thumb-border">
+              {orders.filter(o => o.status === 'ready').map(order => (
+                <OrderCard key={order._id} order={order} />
+              ))}
+            </div>
           </div>
-          <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-gray-800 rounded-lg text-gray-600 p-8 text-center">
-            <CheckCircle2 size={48} className="mb-4 opacity-50" />
-            <p>Orders disappear once marked as served to keep the dashboard clean.</p>
-          </div>
-        </div>
 
+          {/* Served Column (Recent) */}
+          <div className="flex flex-col h-full opacity-65 overflow-hidden">
+            <div className="glass border border-border/20 rounded-2xl p-4 mb-3 flex justify-between items-center shadow-md">
+              <h2 className="font-bold font-heading text-foreground/70 flex items-center gap-2">
+                <User size={18} className="text-foreground/50" /> Served
+              </h2>
+            </div>
+            <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-border/20 rounded-2xl text-muted-foreground p-8 text-center bg-card/10 backdrop-blur-sm">
+              <CheckCircle2 size={40} className="mb-3 text-muted-foreground/45" />
+              <p className="text-sm font-medium">Orders disappear once marked as served to keep the dashboard clean.</p>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   );

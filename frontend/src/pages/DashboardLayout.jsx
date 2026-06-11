@@ -52,21 +52,28 @@ const DashboardLayout = () => {
   const filteredNavItems = navItems.filter(item => item.roles.includes(user?.role));
 
   return (
-    <div className="flex min-h-screen w-full bg-gradient-to-br from-background to-muted/50">
-      <aside className="hidden w-64 flex-col border-r bg-background/80 backdrop-blur-xl sm:flex z-10 animate-fade-in shadow-lg">
-        <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-          <Link to="/" className="flex items-center gap-2 font-bold font-heading text-xl text-primary transition-transform hover:scale-105 active:scale-95">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-500">{restaurantName}</span>
+    <div className="flex min-h-screen w-full bg-background text-foreground overflow-hidden relative transition-colors duration-300">
+      {/* Background blobs for premium glassmorphism */}
+      <div className="bg-blobs">
+        <div className="bg-blob-1"></div>
+        <div className="bg-blob-2"></div>
+        <div className="bg-blob-3"></div>
+      </div>
+
+      <aside className="hidden w-64 flex-col glass border-none sm:flex z-10 animate-fade-in shadow-xl m-4 rounded-2xl">
+        <div className="flex h-14 items-center border-b border-border/20 px-4 lg:h-[60px] lg:px-6">
+          <Link to="/" className="flex items-center gap-2 font-bold font-heading text-xl text-foreground transition-transform hover:scale-105 active:scale-95">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground/90 to-foreground/50">{restaurantName}</span>
           </Link>
         </div>
-        <div className="flex-1 overflow-auto py-2">
-          <nav className="grid items-start px-2 text-sm font-medium lg:px-4 gap-1">
+        <div className="flex-1 overflow-auto py-4 hide-scrollbar">
+          <nav className="grid items-start px-2 text-sm font-medium lg:px-4 gap-1.5">
             {filteredNavItems.map((item) => (
               <Link
                 key={item.name}
                 to={item.path}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-300 hover:text-primary hover:bg-primary/10 hover:translate-x-1 ${
-                  location.pathname === item.path ? 'bg-primary/15 text-primary font-semibold shadow-sm' : 'text-muted-foreground'
+                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-300 hover:text-foreground hover:bg-foreground/10 hover:translate-x-1 ${
+                  location.pathname === item.path ? 'bg-foreground/10 text-foreground font-bold shadow-md border border-border' : 'text-muted-foreground'
                 }`}
               >
                 {item.icon}
@@ -75,10 +82,10 @@ const DashboardLayout = () => {
             ))}
           </nav>
         </div>
-        <div className="mt-auto p-4 border-t border-white/5">
+        <div className="mt-auto p-4 border-t border-border/20">
           <button
             onClick={logout}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-all duration-300 hover:text-destructive hover:bg-destructive/10 hover:translate-x-1"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-300 hover:text-destructive hover:bg-destructive/10 hover:translate-x-1"
           >
             <LogOut className="h-5 w-5" />
             Logout
@@ -86,20 +93,20 @@ const DashboardLayout = () => {
         </div>
       </aside>
       
-      <div className="flex flex-col flex-1 overflow-hidden">
-        <header className="flex h-14 items-center gap-4 border-b bg-background/60 backdrop-blur-md px-4 lg:h-[60px] lg:px-6 justify-between sm:justify-end sticky top-0 z-10 shadow-sm transition-all duration-300">
-          <div className="sm:hidden font-bold font-heading text-lg text-primary">{restaurantName}</div>
+      <div className="flex flex-col flex-1 overflow-hidden relative z-10 m-4 ml-0 sm:m-4 sm:ml-0">
+        <header className="flex h-14 items-center gap-4 border border-border/40 bg-card/40 backdrop-blur-md px-4 lg:h-[60px] lg:px-6 justify-between sm:justify-end sticky top-0 z-10 rounded-2xl shadow-lg transition-all duration-300">
+          <div className="sm:hidden font-bold font-heading text-lg text-foreground">{restaurantName}</div>
           <div className="flex items-center gap-4">
             <ServiceNotifications />
             <div className="flex items-center gap-3 cursor-pointer group">
-              <div className="text-sm font-medium group-hover:text-primary transition-colors">{user?.name}</div>
-              <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-primary to-purple-500 flex items-center justify-center text-white font-bold shadow-md group-hover:scale-110 transition-transform duration-300">
+              <div className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">{user?.name}</div>
+              <div className="h-9 w-9 rounded-full bg-foreground text-background flex items-center justify-center font-bold shadow-md group-hover:scale-110 transition-transform duration-300 border border-border">
                 {user?.name?.charAt(0).toUpperCase()}
               </div>
             </div>
           </div>
         </header>
-        <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 animate-fade-in">
+        <main className="flex-1 overflow-auto py-6 sm:px-4 md:px-6 lg:px-8 animate-fade-in hide-scrollbar">
           <Outlet />
         </main>
       </div>

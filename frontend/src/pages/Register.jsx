@@ -27,14 +27,21 @@ const Register = () => {
   };
 
   return (
-    <div className="flex h-screen w-full items-center justify-center bg-muted/40">
-      <Card className="w-full max-w-sm">
+    <div className="flex h-screen w-full items-center justify-center bg-background overflow-hidden relative transition-colors duration-300">
+      {/* Background blobs for premium glassmorphism */}
+      <div className="bg-blobs">
+        <div className="bg-blob-1"></div>
+        <div className="bg-blob-2"></div>
+        <div className="bg-blob-3"></div>
+      </div>
+      
+      <Card className="w-full max-w-sm z-10 shadow-2xl relative">
         <CardHeader>
-          <CardTitle className="text-2xl">Register</CardTitle>
-          <CardDescription>Create a new owner account.</CardDescription>
+          <CardTitle className="text-2xl font-heading">Register</CardTitle>
+          <CardDescription className="font-sans">Create a new owner account.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleRegister} className="grid gap-4">
+          <form onSubmit={handleRegister} className="grid gap-4 font-sans">
             {error && <div className="text-red-500 text-sm">{error}</div>}
             <div className="grid gap-2">
               <Label htmlFor="name">Name</Label>
@@ -48,12 +55,12 @@ const Register = () => {
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
-            <Button type="submit" className="w-full">Create Account</Button>
+            <Button type="submit" className="w-full font-heading">Create Account</Button>
           </form>
         </CardContent>
         <CardFooter>
-          <div className="text-sm text-center w-full">
-            Already have an account? <Link to="/login" className="underline">Login</Link>
+          <div className="text-sm text-center w-full font-sans">
+            Already have an account? <Link to="/login" className="underline text-foreground">Login</Link>
           </div>
         </CardFooter>
       </Card>
