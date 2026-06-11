@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Vibrant Indigo Theme - Light */
+    --background: 240 20% 99%;
+    --foreground: 240 10% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 10%;
+    --primary: 250 84% 54%; /* Vibrant Indigo */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 240 10% 94%;
+    --secondary-foreground: 240 20% 20%;
+    --muted: 240 10% 94%;
+    --muted-foreground: 240 5% 45%;
+    --accent: 250 84% 95%;
+    --accent-foreground: 250 84% 40%;
+    --destructive: 348 83% 54%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 240 10% 90%;
+    --input: 240 10% 90%;
+    --ring: 250 84% 54%;
+    --radius: 0.75rem; /* Smoother, larger radius */
+  }
+
+  .dark {
+    /* Rich Midnight Dark Theme */
+    --background: 240 10% 4%;
+    --foreground: 210 40% 98%;
+    --card: 240 12% 8%;
+    --card-foreground: 210 40% 98%;
+    --popover: 240 12% 8%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 250 84% 65%; /* Lighter Indigo for Dark Mode */
+    --primary-foreground: 240 10% 4%;
+    --secondary: 240 10% 15%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 240 10% 15%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 250 84% 15%;
+    --accent-foreground: 250 84% 75%;
+    --destructive: 348 83% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 240 10% 15%;
+    --input: 240 10% 15%;
+    --ring: 250 84% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased selection:bg-primary/20 selection:text-primary;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-tight;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-background/70 backdrop-blur-md border border-white/10 dark:border-white/5;
+  }
+  .card-hover {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5;
+  }
+  .btn-hover {
+    @apply transition-all duration-200 active:scale-95 hover:shadow-lg hover:shadow-primary/20;
+  }
+}
