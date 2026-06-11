@@ -31,6 +31,7 @@ const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
+// Socket.io
 const io = socket.init(server);
 io.on('connection', (client) => {
   console.log('Client connected:', client.id);
@@ -46,34 +47,51 @@ io.on('connection', (client) => {
   });
 });
 
-// Middleware
-app.use(helmet());
-app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
-
+// ─── Middleware ───────────────────────────────────────────
 app.set('trust proxy', 1);
 
+// CORS — must come BEFORE helmet so preflight OPTIONS works
+app.use(
+  cors({
+    origin: true,
+    credentials: true
+  })
+);
+
+// Helmet — disable crossOriginResourcePolicy so cross-origin API calls work
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    crossOriginOpenerPolicy: false
+  })
+);
+
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // Increased limit
-  skip: (req) => req.method === 'OPTIONS', // Do not rate limit CORS preflight requests
+  windowMs: 15 * 60 * 1000,
+  max: 1000,
+  skip: (req) => req.method === 'OPTIONS',
   message: 'Too many requests from this IP, please try again after 15 minutes'
 });
 app.use('/api', limiter);
 
-app.use(
-  cors({
-    origin: true, // Reflects the requesting origin (Allows all domains)
-    credentials: true
-  })
-);
 app.use(express.json());
 
-// Database connection
-mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/restaurant_db')
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
+// ─── Health check (Render pings this to know the server is alive) ───
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', message: 'Ahhar API is running' });
+});
 
-// Routes
+// ─── Database ────────────────────────────────────────────
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
+  });
+
+// ─── Routes ──────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/restaurant', restaurantRoutes);
 app.use('/api/tables', tableRoutes);
@@ -91,21 +109,16 @@ app.use('/api/purchase-orders', purchaseOrderRoutes);
 app.use('/api/recipes', recipeRoutes);
 app.use('/api/reports', reportRoutes);
 
-// Error handling middleware
+// ─── Error handling ──────────────────────────────────────
 app.use((err, req, res, next) => {
-  if (process.env.NODE_ENV !== 'production') {
-    console.error(err.stack);
-  } else {
-    console.error(`[Error] ${err.message}`);
-  }
-  
+  console.error(err.stack);
   const status = err.statusCode || 500;
   res.status(status).json({
-    message: process.env.NODE_ENV === 'production' ? 'Internal Server Error' : err.message,
-    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+    message: process.env.NODE_ENV === 'production' ? 'Internal Server Error' : err.message
   });
 });
 
-server.listen(PORT, () => {
+// ─── Start ───────────────────────────────────────────────
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
