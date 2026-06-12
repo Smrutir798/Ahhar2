@@ -5,7 +5,7 @@ const Restaurant = require('../models/Restaurant');
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -18,21 +18,26 @@ exports.register = async (req, res) => {
     const newUser = new User({
       name,
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      role: role === 'thinkdifferent' ? 'thinkdifferent' : 'admin'
     });
 
     await newUser.save();
 
-    // Create an empty restaurant profile for the owner
-    const newRestaurant = new Restaurant({
-      ownerId: newUser._id,
-      name: `${name}'s Restaurant`
-    });
-    await newRestaurant.save();
+    let restaurantId = null;
+    if (newUser.role !== 'thinkdifferent') {
+      // Create an empty restaurant profile for the owner
+      const newRestaurant = new Restaurant({
+        ownerId: newUser._id,
+        name: `${name}'s Restaurant`
+      });
+      await newRestaurant.save();
+      restaurantId = newRestaurant._id;
+    }
 
-    const token = jwt.sign({ id: newUser._id, role: newUser.role, restaurantId: newRestaurant._id }, process.env.JWT_SECRET || 'secret_key', { expiresIn: '1d' });
+    const token = jwt.sign({ id: newUser._id, role: newUser.role, restaurantId }, process.env.JWT_SECRET || 'secret_key', { expiresIn: '1d' });
 
-    res.status(201).json({ token, user: { id: newUser._id, name: newUser.name, email: newUser.email, role: newUser.role, restaurantId: newRestaurant._id } });
+    res.status(201).json({ token, user: { id: newUser._id, name: newUser.name, email: newUser.email, role: newUser.role, restaurantId } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });

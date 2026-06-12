@@ -6,6 +6,8 @@ const Restaurant = require('../models/Restaurant');
 
 router.get('/', authMiddleware, restaurantController.getRestaurant);
 router.put('/', authMiddleware, restaurantController.updateRestaurant);
+router.get('/all', authMiddleware, restaurantController.getAllRestaurants);
+router.post('/add-restaurant', authMiddleware, restaurantController.createNewRestaurantByThinkDifferent);
 
 // Update tax settings
 router.put('/:id/taxes', authMiddleware, async (req, res) => {

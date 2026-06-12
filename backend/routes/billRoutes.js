@@ -7,6 +7,22 @@ const Order = require('../models/Order');
 const Restaurant = require('../models/Restaurant');
 const Table = require('../models/Table');
 const socket = require('../socket');
+const QRCode = require('qrcode');
+
+async function appendUpiDetails(bill, restaurant) {
+  const upiId = restaurant?.upiId || 'merchant@upi';
+  const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(restaurant?.name || 'Ahhar')}&am=${bill.grandTotal}&cu=INR&tn=${encodeURIComponent(bill.billNumber)}`;
+  let upiQrCodeUrl = '';
+  try {
+    upiQrCodeUrl = await QRCode.toDataURL(upiUrl);
+  } catch (err) {
+    console.error('QR code generation failed', err);
+  }
+  const billObj = bill.toObject();
+  billObj.upiUrl = upiUrl;
+  billObj.upiQrCodeUrl = upiQrCodeUrl;
+  return billObj;
+}
 
 // Generate a bill for a session
 router.post('/generate/:sessionId', async (req, res) => {
@@ -16,7 +32,9 @@ router.post('/generate/:sessionId', async (req, res) => {
     // Check if bill already exists
     const existingBill = await Bill.findOne({ sessionId });
     if (existingBill) {
-      return res.json(existingBill);
+      const restaurant = await Restaurant.findById(existingBill.restaurantId);
+      const fullBill = await appendUpiDetails(existingBill, restaurant);
+      return res.json(fullBill);
     }
     
     const session = await Session.findById(sessionId);
@@ -63,7 +81,8 @@ router.post('/generate/:sessionId', async (req, res) => {
     const io = socket.getIO();
     io.to(session.restaurantId.toString()).emit('new-bill', newBill);
     
-    res.status(201).json(newBill);
+    const fullBill = await appendUpiDetails(newBill, restaurant);
+    res.status(201).json(fullBill);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -118,10 +137,11 @@ router.get('/session/:sessionId', async (req, res) => {
   try {
     const bill = await Bill.findOne({ sessionId: req.params.sessionId })
       .populate('tableId', 'tableNumber')
-      .populate({ path: 'restaurantId', select: 'name address phone gstNumber logo taxSettings' });
+      .populate({ path: 'restaurantId', select: 'name address phone gstNumber logo taxSettings upiId' });
       
     if (!bill) return res.status(404).json({ message: 'Bill not found' });
-    res.json(bill);
+    const fullBill = await appendUpiDetails(bill, bill.restaurantId);
+    res.json(fullBill);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }

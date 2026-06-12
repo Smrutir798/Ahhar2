@@ -7,6 +7,7 @@ const restaurantSchema = new mongoose.Schema({
   phone: { type: String, default: '' },
   gstNumber: { type: String, default: '' },
   logo: { type: String, default: '' },
+  upiId: { type: String, default: '' }, // UPI ID for restaurant payments (e.g. restaurant@upi)
   taxSettings: {
     cgst: { type: Number, default: 2.5 },
     sgst: { type: Number, default: 2.5 },

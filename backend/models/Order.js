@@ -5,7 +5,12 @@ const orderItemSchema = new mongoose.Schema({
   name: { type: String, required: true },
   quantity: { type: Number, required: true },
   price: { type: Number, required: true },
-  instructions: { type: String }
+  instructions: { type: String },
+  selectedModifiers: [{
+    name: { type: String },
+    option: { type: String },
+    price: { type: Number }
+  }]
 });
 
 const orderSchema = new mongoose.Schema({

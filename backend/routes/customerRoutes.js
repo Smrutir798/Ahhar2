@@ -93,8 +93,8 @@ router.post('/orders', async (req, res) => {
     
     await newOrder.save();
     
-    // Update session total
-    await Session.findByIdAndUpdate(sessionId, { $inc: { totalAmount } });
+    // Update session total and clear active cart
+    await Session.findByIdAndUpdate(sessionId, { $inc: { totalAmount }, $set: { cart: [] } });
     
     // Automatic Stock Deduction Logic
     const Recipe = require('../models/Recipe');
@@ -144,10 +144,11 @@ router.post('/orders', async (req, res) => {
     // Populate table details before emitting
     await newOrder.populate('tableId', 'tableNumber');
     
-    // Emit to kitchen
+    // Emit to kitchen and reset table cart
     const io = socket.getIO();
     // Use toString() to ensure string format
     io.to(restaurantId.toString()).emit('new-order', newOrder);
+    io.to(sessionId.toString()).emit('cart-updated', []);
     
     res.status(201).json(newOrder);
   } catch (err) {
@@ -202,6 +203,28 @@ router.get('/service-request/session/:sessionId', async (req, res) => {
     }).populate('assignedTo', 'name');
     res.json(requests);
   } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update session cart (shared cart sync)
+router.put('/session/:sessionId/cart', async (req, res) => {
+  try {
+    const { cart } = req.body;
+    const session = await Session.findByIdAndUpdate(
+      req.params.sessionId,
+      { cart },
+      { new: true }
+    );
+    if (!session) return res.status(404).json({ message: 'Session not found' });
+    
+    // Broadcast updated cart to the session room
+    const io = socket.getIO();
+    io.to(req.params.sessionId).emit('cart-updated', session.cart);
+    
+    res.json(session.cart);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
