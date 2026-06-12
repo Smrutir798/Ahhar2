@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import axios from '@/lib/axios';
 import useSocket from '../../hooks/useSocket';
 import { AuthContext } from '../../context/AuthContext';
-import { Bell, Clock, ChefHat, CheckCircle2, User, Volume2, VolumeX } from 'lucide-react';
+import { Bell, Clock, ChefHat, CheckCircle, User, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
@@ -132,6 +132,11 @@ const KitchenDashboard = () => {
                 <span className="font-medium">{item.name}</span>
               </div>
             </div>
+            {item.selectedModifiers && item.selectedModifiers.length > 0 && (
+              <p className="text-xs text-muted-foreground ml-6">
+                + {item.selectedModifiers.map(m => `${m.name}: ${m.option}`).join(', ')}
+              </p>
+            )}
             {item.instructions && (
               <p className="text-xs text-destructive bg-destructive/5 border border-destructive/10 rounded-md px-2 py-1 mt-1 ml-6 max-w-full break-words">
                 Note: {item.instructions}
@@ -276,7 +281,7 @@ const KitchenDashboard = () => {
           <div className="flex flex-col h-full overflow-hidden">
             <div className="glass border border-border/20 rounded-2xl p-4 mb-3 flex justify-between items-center shadow-md">
               <h2 className="font-bold font-heading text-foreground flex items-center gap-2">
-                <CheckCircle2 size={18} className="text-foreground/80" /> Ready
+                <CheckCircle size={18} className="text-foreground/80" /> Ready
               </h2>
               <span className="bg-foreground text-background px-2.5 py-0.5 rounded-full text-xs font-bold shadow-sm">
                 {stats.ready}
@@ -297,7 +302,7 @@ const KitchenDashboard = () => {
               </h2>
             </div>
             <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-border/20 rounded-2xl text-muted-foreground p-8 text-center bg-card/10 backdrop-blur-sm">
-              <CheckCircle2 size={40} className="mb-3 text-muted-foreground/45" />
+              <CheckCircle size={40} className="mb-3 text-muted-foreground/45" />
               <p className="text-sm font-medium">Orders disappear once marked as served to keep the dashboard clean.</p>
             </div>
           </div>

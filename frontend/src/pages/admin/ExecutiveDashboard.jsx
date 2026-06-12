@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from '@/lib/axios';
-import { Download, TrendingUp, IndianRupee, ShoppingBag, Users, Clock, AlertCircle } from 'lucide-react';
+import { Download, TrendingUp, DollarSign, ShoppingBag, Users, Clock, AlertTriangle } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 
@@ -106,7 +106,7 @@ const ExecutiveDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {insights.map((insight, idx) => (
             <div key={idx} className="p-4 rounded-xl border border-border bg-foreground/5 flex items-start gap-3 hover:border-foreground/20 transition-all duration-300">
-              <AlertCircle size={20} className="mt-0.5 flex-shrink-0 text-foreground" />
+              <AlertTriangle className="text-amber-500 mt-0.5 flex-shrink-0" size={16} />
               <p className="text-sm font-medium font-sans text-foreground">{insight.text}</p>
             </div>
           ))}

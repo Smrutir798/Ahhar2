@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import axios from '@/lib/axios';
 import { AuthContext } from '../../context/AuthContext';
 import useSocket from '../../hooks/useSocket';
-import { FileText, CheckCircle2, Banknote, CreditCard, ScanLine, Printer, Search } from 'lucide-react';
+import { FileText, CheckCircle, Banknote, CreditCard, QrCode, Printer, Search } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -215,7 +215,7 @@ const BillingDashboard = () => {
                     ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/25' 
                     : 'bg-amber-500/10 text-amber-500 border border-amber-500/25'
                 }`}>
-                  {bill.paymentStatus.toUpperCase()}
+                  {bill.paymentStatus?.toUpperCase()}
                 </div>
               </div>
               
@@ -264,7 +264,7 @@ const BillingDashboard = () => {
                         onClick={() => markAsPaid(bill._id, 'upi')}
                         className="flex flex-col h-auto items-center justify-center p-2 rounded-xl border border-border/20 hover:bg-foreground/5 transition-all duration-300"
                       >
-                        <ScanLine size={16} className="mb-1 text-foreground" />
+                        <QrCode size={16} className="mb-1 text-foreground" />
                         <span className="text-[10px] font-bold">UPI</span>
                       </Button>
                       <Button 
@@ -281,7 +281,7 @@ const BillingDashboard = () => {
                 ) : (
                   <div className="flex justify-between items-center text-sm font-sans">
                     <div className="flex items-center text-emerald-500 font-bold">
-                      <CheckCircle2 size={16} className="mr-1.5" /> Paid via {bill.paymentMethod.toUpperCase()}
+                      <CheckCircle size={16} className="mr-1.5" /> Paid via {bill.paymentMethod?.toUpperCase()}
                     </div>
                     <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-foreground/10 text-muted-foreground hover:text-foreground">
                       <Printer size={16} />

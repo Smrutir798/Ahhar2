@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { LayoutDashboard, Users, TableProperties, MenuSquare, UtensilsCrossed, Settings, LogOut, Receipt, BarChart3, Activity, BellRing, PackageSearch, Truck, ClipboardList, ChefHat, CheckSquare, QrCode, TrendingUp, Package } from 'lucide-react';
+import { LayoutDashboard, Users, TableProperties, Menu, Utensils, Settings, LogOut, Receipt, BarChart, Activity, BellRing, Search, Truck, ClipboardList, ChefHat, Check, QrCode, TrendingUp, Package } from 'lucide-react';
 import axios from '@/lib/axios';
 import ServiceNotifications from '../components/ServiceNotifications';
 
@@ -26,13 +26,13 @@ const DashboardLayout = () => {
 
   const navItems = [
     { name: 'Executive Dashboard', path: '/executive-dashboard', icon: <LayoutDashboard className="h-5 w-5" />, roles: ['admin', 'owner'] },
-    { name: 'Menu Management', path: '/menu', icon: <UtensilsCrossed className="h-5 w-5" />, roles: ['admin', 'owner'] },
-    { name: 'Table Management', path: '/tables', icon: <CheckSquare className="h-5 w-5" />, roles: ['admin', 'owner'] },
+    { name: 'Menu Management', path: '/menu', icon: <Utensils className="h-5 w-5" />, roles: ['admin', 'owner'] },
+    { name: 'Table Management', path: '/tables', icon: <Check className="h-5 w-5" />, roles: ['admin', 'owner'] },
     { name: 'Billing & Payments', path: '/billing', icon: <Receipt className="h-5 w-5" />, roles: ['admin', 'owner', 'cashier'] },
     
     // BI & Analytics
-    { name: 'Sales & Revenue BI', path: '/analytics', icon: <TrendingUp className="h-5 w-5" />, roles: ['admin', 'owner'] },
-    { name: 'Customer Feedback BI', path: '/service-analytics', icon: <BarChart3 className="h-5 w-5" />, roles: ['admin', 'owner'] },
+    { name: 'Revenue Analytics', path: '/analytics', icon: <BarChart className="h-5 w-5" />, roles: ['admin', 'owner'] },
+    { name: 'Customer Feedback BI', path: '/service-analytics', icon: <BarChart className="h-5 w-5" />, roles: ['admin', 'owner'] },
     { name: 'Staff Performance BI', path: '/staff-analytics', icon: <Users className="h-5 w-5" />, roles: ['admin', 'owner'] },
     
     // Kitchen & Waiter
@@ -44,8 +44,8 @@ const DashboardLayout = () => {
     { name: 'Suppliers', path: '/suppliers', icon: <Truck className="h-5 w-5" />, roles: ['admin', 'owner', 'inventory_manager'] },
     { name: 'Purchase Orders', path: '/purchase-orders', icon: <ClipboardList className="h-5 w-5" />, roles: ['admin', 'owner', 'inventory_manager'] },
     { name: 'Recipe Maps', path: '/recipes', icon: <ChefHat className="h-5 w-5" />, roles: ['admin', 'owner', 'inventory_manager'] },
-    { name: 'Stock Analytics', path: '/inventory-analytics', icon: <BarChart3 className="h-5 w-5" />, roles: ['admin', 'owner', 'inventory_manager'] },
-    { name: 'Categories', path: '/categories', icon: <MenuSquare className="h-5 w-5" />, roles: ['admin', 'owner'] },
+    { name: 'Inventory Analytics', path: '/inventory-analytics', icon: <Search className="h-5 w-5" />, roles: ['admin', 'owner', 'inventory_manager'] },
+    { name: 'Categories', path: '/categories', icon: <Menu className="h-5 w-5" />, roles: ['admin', 'owner'] },
     { name: 'Settings', path: '/profile', icon: <Settings className="h-5 w-5" />, roles: ['admin', 'owner'] },
   ];
 
@@ -101,7 +101,7 @@ const DashboardLayout = () => {
             <div className="flex items-center gap-3 cursor-pointer group">
               <div className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">{user?.name}</div>
               <div className="h-9 w-9 rounded-full bg-foreground text-background flex items-center justify-center font-bold shadow-md group-hover:scale-110 transition-transform duration-300 border border-border">
-                {user?.name?.charAt(0).toUpperCase()}
+                {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
               </div>
             </div>
           </div>

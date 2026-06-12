@@ -21,7 +21,9 @@ const Login = () => {
       const user = res.data.user;
       login(user, res.data.token);
 
-      if (['admin', 'owner'].includes(user?.role)) {
+      if (user?.role === 'thinkdifferent') {
+        navigate('/thinkdifferent');
+      } else if (['admin', 'owner'].includes(user?.role)) {
         navigate('/executive-dashboard');
       } else if (user?.role === 'kitchen') {
         navigate('/kitchen');
@@ -64,8 +66,8 @@ const Login = () => {
           </form>
         </CardContent>
         <CardFooter>
-          <div className="text-sm text-center w-full font-sans">
-            Don't have an account? <Link to="/register" className="underline text-foreground">Register</Link>
+          <div className="text-sm text-center w-full font-sans border-t border-border/40 pt-4 mt-1">
+            Are you a ThinkDifferent Member? <Link to="/thinkdifferent-login" className="underline text-foreground font-bold hover:text-foreground/80 transition-colors">Login</Link>
           </div>
         </CardFooter>
       </Card>

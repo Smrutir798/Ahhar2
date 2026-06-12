@@ -1,4 +1,18 @@
 /** @type {import('tailwindcss').Config} */
+const monoColors = {
+  50: '#fafafa',
+  100: '#f0f0f0',
+  200: '#e5e5e5',
+  300: '#d4d4d4',
+  400: '#a3a3a3',
+  500: '#737373',
+  600: '#666666',
+  700: '#404040',
+  800: '#262626',
+  900: '#000000',
+  950: '#000000',
+};
+
 export default {
   darkMode: ["class"],
   content: [
@@ -41,15 +55,30 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Override all Tailwind standard colors with strict monochromatic values
+        gray: monoColors,
+        slate: monoColors,
+        zinc: monoColors,
+        neutral: monoColors,
+        stone: monoColors,
+        blue: monoColors,
+        green: monoColors,
+        amber: monoColors,
+        orange: monoColors,
+        indigo: monoColors,
+        purple: monoColors,
+        violet: monoColors,
+        rose: monoColors,
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        lg: "var(--radius-lg)",
+        md: "var(--radius-md)",
+        sm: "var(--radius-sm)",
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        heading: ['Outfit', 'sans-serif'],
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        heading: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        mono: ['Space Grotesk', 'ui-monospace', 'SFMono-Regular', 'Consolas', 'monospace'],
       },
       keyframes: {
         "fade-in": {

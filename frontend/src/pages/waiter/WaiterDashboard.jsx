@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import axios from '@/lib/axios';
 import { AuthContext } from '../../context/AuthContext';
 import useSocket from '../../hooks/useSocket';
-import { Bell, Droplet, Wind, Sparkles, Receipt, HelpCircle, CheckCircle2 } from 'lucide-react';
+import { Bell, Droplet, Wind, Sparkles, Receipt, HelpCircle, CheckCircle } from 'lucide-react';
 
 const WaiterDashboard = () => {
   const { user } = useContext(AuthContext);
@@ -136,7 +136,7 @@ const WaiterDashboard = () => {
                     onClick={() => completeRequest(req._id)}
                     className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-1 transition-colors"
                   >
-                    <CheckCircle2 size={16} /> Mark Completed
+                    <CheckCircle size={16} /> Mark Completed
                   </button>
                 )}
               </div>

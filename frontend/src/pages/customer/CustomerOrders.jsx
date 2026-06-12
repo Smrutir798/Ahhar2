@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from '@/lib/axios';
 import { CartContext } from '../../context/CartContext';
 import useSocket from '../../hooks/useSocket';
-import { ArrowLeft, CheckCircle2, Clock, Utensils, Receipt, Bell, Plus, MessageSquare, Droplet, Wind, Sparkles } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, Utensils, Receipt, Bell, Plus, MessageSquare, Droplet, Wind, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 const CustomerOrders = () => {
@@ -138,7 +138,12 @@ const CustomerOrders = () => {
         
         orders.forEach(order => {
           order.items.forEach(item => {
-            tableRows.push([item.name, item.quantity, item.price * item.quantity]);
+            let itemName = item.name;
+            if (item.selectedModifiers && item.selectedModifiers.length > 0) {
+              const mods = item.selectedModifiers.map(m => `${m.name}: ${m.option}`).join(', ');
+              itemName += ` (${mods})`;
+            }
+            tableRows.push([itemName, item.quantity, item.price * item.quantity]);
           });
         });
         
@@ -221,9 +226,21 @@ const CustomerOrders = () => {
                   </div>
                   <div className="space-y-3 mb-4 font-sans">
                     {order.items.map((item, idx) => (
-                      <div key={idx} className="flex justify-between text-sm">
-                        <span className="text-muted-foreground font-medium">{item.quantity} x {item.name}</span>
-                        <span className="text-foreground font-bold">₹{item.price * item.quantity}</span>
+                      <div key={idx} className="flex flex-col text-sm border-b border-border/10 pb-2 last:border-0 last:pb-0">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground font-medium">{item.quantity} x {item.name}</span>
+                          <span className="text-foreground font-bold">₹{item.price * item.quantity}</span>
+                        </div>
+                        {item.selectedModifiers && item.selectedModifiers.length > 0 && (
+                          <div className="text-[11px] text-muted-foreground ml-6">
+                            + {item.selectedModifiers.map(m => `${m.name}: ${m.option}`).join(', ')}
+                          </div>
+                        )}
+                        {item.instructions && (
+                          <div className="text-[11px] text-destructive italic ml-6">
+                            Note: {item.instructions}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -300,11 +317,23 @@ const CustomerOrders = () => {
                   <span className="font-bold text-2xl text-foreground font-heading">₹{generatedBill.grandTotal}</span>
                 </div>
               </div>
-              <div className="bg-card border-2 border-foreground rounded-xl p-6 flex flex-col items-center justify-center mb-6">
-                  <span className="text-xs text-muted-foreground uppercase tracking-widest font-bold mb-3 font-heading">Pay via UPI</span>
-                  <div className="w-32 h-32 bg-foreground/5 border border-border flex items-center justify-center rounded-lg shadow-sm">
-                    <Receipt size={40} className="text-muted-foreground/60" />
-                  </div>
+              <div className="bg-card border border-border rounded-xl p-6 flex flex-col items-center justify-center mb-6">
+                  <span className="text-xs text-muted-foreground uppercase tracking-widest font-bold mb-3 font-heading">Scan to Pay via UPI</span>
+                  {generatedBill.upiQrCodeUrl ? (
+                    <img src={generatedBill.upiQrCodeUrl} alt="UPI QR Code" className="w-40 h-40 object-contain border rounded-lg p-1 bg-white shadow-sm" />
+                  ) : (
+                    <div className="w-32 h-32 bg-foreground/5 border border-border flex items-center justify-center rounded-lg shadow-sm">
+                      <Receipt size={40} className="text-muted-foreground/60" />
+                    </div>
+                  )}
+                  {generatedBill.upiUrl && (
+                    <a 
+                      href={generatedBill.upiUrl}
+                      className="mt-4 inline-flex items-center gap-2 bg-foreground text-background text-xs font-bold px-4 py-2 rounded-full hover:opacity-90 active:scale-95 transition-all shadow-sm"
+                    >
+                      <Receipt size={14} /> Open UPI App
+                    </a>
+                  )}
               </div>
               <div className="grid grid-cols-2 gap-3 mt-auto">
                 <Button variant="outline" className="w-full h-12 rounded-full font-bold" onClick={downloadPDF}>Download PDF</Button>
@@ -321,7 +350,7 @@ const CustomerOrders = () => {
           <div className="flex-1 max-w-md mx-auto w-full flex flex-col justify-center">
             <div className="text-center mb-8 mt-10">
               <div className="w-16 h-16 bg-foreground text-background border border-border rounded-full flex items-center justify-center mx-auto mb-4 shadow-md shadow-foreground/5">
-                <CheckCircle2 size={32} />
+                <CheckCircle size={32} />
               </div>
               <h2 className="text-2xl font-bold text-foreground font-heading">Payment Successful!</h2>
               <p className="text-muted-foreground mt-2 font-sans">How was your experience today?</p>

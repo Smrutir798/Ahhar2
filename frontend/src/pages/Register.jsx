@@ -18,9 +18,9 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('/auth/register', { name, email, password });
+      const res = await axios.post('/auth/register', { name, email, password, role: 'thinkdifferent' });
       login(res.data.user, res.data.token);
-      navigate('/');
+      navigate('/thinkdifferent');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
     }
@@ -37,8 +37,8 @@ const Register = () => {
       
       <Card className="w-full max-w-sm z-10 shadow-2xl relative">
         <CardHeader>
-          <CardTitle className="text-2xl font-heading">Register</CardTitle>
-          <CardDescription className="font-sans">Create a new owner account.</CardDescription>
+          <CardTitle className="text-2xl font-heading">ThinkDifferent Registration</CardTitle>
+          <CardDescription className="font-sans">Create a new platform administrator account.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleRegister} className="grid gap-4 font-sans">
@@ -59,8 +59,8 @@ const Register = () => {
           </form>
         </CardContent>
         <CardFooter>
-          <div className="text-sm text-center w-full font-sans">
-            Already have an account? <Link to="/login" className="underline text-foreground">Login</Link>
+          <div className="text-sm text-center w-full font-sans border-t border-border/40 pt-4 mt-1">
+            Already registered? <Link to="/login" className="underline text-foreground font-bold hover:text-foreground/80 transition-colors">Login Here</Link>
           </div>
         </CardFooter>
       </Card>

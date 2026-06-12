@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ThinkDifferentLogin from './pages/ThinkDifferentLogin';
 import DashboardLayout from './pages/DashboardLayout';
 import DashboardHome from './pages/DashboardHome';
 import Tables from './pages/Tables';
@@ -27,6 +28,7 @@ import RecipeManager from './pages/admin/RecipeManager';
 import InventoryAnalytics from './pages/admin/InventoryAnalytics';
 import ExecutiveDashboard from './pages/admin/ExecutiveDashboard';
 import StaffAnalytics from './pages/admin/StaffAnalytics';
+import ThinkDifferentDashboard from './pages/admin/ThinkDifferentDashboard';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useContext(AuthContext);
@@ -46,6 +48,7 @@ const App = () => {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/thinkdifferent-login" element={<ThinkDifferentLogin />} />
         
         {/* Customer Facing Routes */}
         <Route path="/menu/table/:tableId" element={<CustomerLayout />}>
@@ -53,6 +56,13 @@ const App = () => {
           <Route path="cart" element={<CustomerCart />} />
           <Route path="history" element={<CustomerOrders />} />
         </Route>
+
+        {/* ThinkDifferent Dashboard */}
+        <Route path="/thinkdifferent" element={
+          <ProtectedRoute allowedRoles={['thinkdifferent']}>
+            <ThinkDifferentDashboard />
+          </ProtectedRoute>
+        } />
 
         {/* Kitchen Dashboard */}
         <Route path="/kitchen" element={

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from '@/lib/axios';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Utensils, TableProperties, CircleCheck, TrendingUp } from 'lucide-react';
+import { Utensils, TableProperties, CheckCircle, TrendingUp } from 'lucide-react';
 
 const DashboardHome = () => {
   const [stats, setStats] = useState({
@@ -52,7 +52,7 @@ const DashboardHome = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium">Active Tables</CardTitle>
-            <CircleCheck className="w-4 h-4 text-muted-foreground" />
+            <CheckCircle className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.activeTables}</div>

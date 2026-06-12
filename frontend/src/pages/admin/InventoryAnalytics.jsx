@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from '@/lib/axios';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { PackageSearch } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 const InventoryAnalytics = () => {
   const [data, setData] = useState({
