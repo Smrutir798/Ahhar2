@@ -46,7 +46,7 @@ router.get('/session/:tableId', async (req, res) => {
 // Create a new session
 router.post('/session/create', async (req, res) => {
   try {
-    const { tableId, restaurantId } = req.body;
+    const { tableId, restaurantId, customerName, customerPhone } = req.body;
     
     // Check if there is already an active session
     let session = await Session.findOne({ tableId, status: 'active' });
@@ -57,6 +57,8 @@ router.post('/session/create', async (req, res) => {
     session = new Session({
       tableId,
       restaurantId,
+      customerName: customerName || '',
+      customerPhone: customerPhone || '',
       status: 'active',
       totalAmount: 0
     });
@@ -207,18 +209,79 @@ router.get('/service-request/session/:sessionId', async (req, res) => {
   }
 });
 
-// Update session cart (shared cart sync)
-router.put('/session/:sessionId/cart', async (req, res) => {
+// Add item to cart atomically
+router.post('/session/:sessionId/cart/add', async (req, res) => {
   try {
-    const { cart } = req.body;
+    const { cartItem } = req.body;
     const session = await Session.findByIdAndUpdate(
       req.params.sessionId,
-      { cart },
+      { $push: { cart: cartItem } },
       { new: true }
     );
     if (!session) return res.status(404).json({ message: 'Session not found' });
     
-    // Broadcast updated cart to the session room
+    // Broadcast updated cart
+    const io = socket.getIO();
+    io.to(req.params.sessionId).emit('cart-updated', session.cart);
+    
+    res.json(session.cart);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update item quantity atomically
+router.put('/session/:sessionId/cart/update', async (req, res) => {
+  try {
+    const { cartItemId, quantity } = req.body;
+    const session = await Session.findOneAndUpdate(
+      { _id: req.params.sessionId, "cart.cartItemId": cartItemId },
+      { $set: { "cart.$.quantity": quantity } },
+      { new: true }
+    );
+    if (!session) return res.status(404).json({ message: 'Session or item not found' });
+    
+    const io = socket.getIO();
+    io.to(req.params.sessionId).emit('cart-updated', session.cart);
+    
+    res.json(session.cart);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Remove item from cart atomically
+router.delete('/session/:sessionId/cart/remove/:cartItemId', async (req, res) => {
+  try {
+    const session = await Session.findByIdAndUpdate(
+      req.params.sessionId,
+      { $pull: { cart: { cartItemId: req.params.cartItemId } } },
+      { new: true }
+    );
+    if (!session) return res.status(404).json({ message: 'Session not found' });
+    
+    const io = socket.getIO();
+    io.to(req.params.sessionId).emit('cart-updated', session.cart);
+    
+    res.json(session.cart);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Clear cart completely (e.g., after placing order)
+router.delete('/session/:sessionId/cart', async (req, res) => {
+  try {
+    const session = await Session.findByIdAndUpdate(
+      req.params.sessionId,
+      { $set: { cart: [] } },
+      { new: true }
+    );
+    if (!session) return res.status(404).json({ message: 'Session not found' });
+    
     const io = socket.getIO();
     io.to(req.params.sessionId).emit('cart-updated', session.cart);
     

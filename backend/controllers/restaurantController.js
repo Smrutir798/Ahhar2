@@ -17,13 +17,13 @@ exports.getRestaurant = async (req, res) => {
 
 exports.updateRestaurant = async (req, res) => {
   try {
-    const { name, address, phone, gstNumber, logo } = req.body;
+    const { name, address, phone, gstNumber, logo, upiId, geofence } = req.body;
     let restaurant = await Restaurant.findOne({ ownerId: req.user.id });
 
     if (!restaurant) {
       restaurant = new Restaurant({
         ownerId: req.user.id,
-        name, address, phone, gstNumber, logo
+        name, address, phone, gstNumber, logo, upiId, geofence
       });
       await restaurant.save();
     } else {
@@ -32,6 +32,8 @@ exports.updateRestaurant = async (req, res) => {
       restaurant.phone = phone !== undefined ? phone : restaurant.phone;
       restaurant.gstNumber = gstNumber !== undefined ? gstNumber : restaurant.gstNumber;
       restaurant.logo = logo !== undefined ? logo : restaurant.logo;
+      restaurant.upiId = upiId !== undefined ? upiId : restaurant.upiId;
+      restaurant.geofence = geofence !== undefined ? geofence : restaurant.geofence;
       await restaurant.save();
     }
     res.json(restaurant);

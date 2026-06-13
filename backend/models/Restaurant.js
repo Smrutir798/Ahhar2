@@ -12,6 +12,12 @@ const restaurantSchema = new mongoose.Schema({
     cgst: { type: Number, default: 2.5 },
     sgst: { type: Number, default: 2.5 },
     serviceCharge: { type: Number, default: 0 }
+  },
+  geofence: {
+    enabled: { type: Boolean, default: false },
+    latitude: { type: Number },
+    longitude: { type: Number },
+    radius: { type: Number, default: 50 } // radius in meters
   }
 }, { timestamps: true });
 

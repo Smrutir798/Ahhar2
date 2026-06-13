@@ -10,7 +10,7 @@ const socket = require('../socket');
 const QRCode = require('qrcode');
 
 async function appendUpiDetails(bill, restaurant) {
-  const upiId = restaurant?.upiId || 'merchant@upi';
+  const upiId = restaurant?.upiId || 'smrutir798@ptaxis';
   const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(restaurant?.name || 'Ahhar')}&am=${bill.grandTotal}&cu=INR&tn=${encodeURIComponent(bill.billNumber)}`;
   let upiQrCodeUrl = '';
   try {
@@ -28,7 +28,7 @@ async function appendUpiDetails(bill, restaurant) {
 router.post('/generate/:sessionId', async (req, res) => {
   try {
     const { sessionId } = req.params;
-    
+
     // Check if bill already exists
     const existingBill = await Bill.findOne({ sessionId });
     if (existingBill) {
@@ -36,27 +36,27 @@ router.post('/generate/:sessionId', async (req, res) => {
       const fullBill = await appendUpiDetails(existingBill, restaurant);
       return res.json(fullBill);
     }
-    
+
     const session = await Session.findById(sessionId);
     if (!session) return res.status(404).json({ message: 'Session not found' });
-    
+
     // Fetch all non-cancelled orders for this session
     const orders = await Order.find({ sessionId, status: { $ne: 'cancelled' } });
-    
+
     const subtotal = orders.reduce((sum, order) => sum + order.totalAmount, 0);
-    
+
     // Get tax settings from restaurant
     const restaurant = await Restaurant.findById(session.restaurantId);
     const taxes = restaurant?.taxSettings || { cgst: 2.5, sgst: 2.5, serviceCharge: 0 };
-    
+
     const cgstAmount = (subtotal * taxes.cgst) / 100;
     const sgstAmount = (subtotal * taxes.sgst) / 100;
     const serviceChargeAmount = (subtotal * taxes.serviceCharge) / 100;
-    
+
     const grandTotal = Math.round(subtotal + cgstAmount + sgstAmount + serviceChargeAmount);
-    
+
     const billNumber = `INV-${Math.floor(100000 + Math.random() * 900000)}`;
-    
+
     const newBill = new Bill({
       billNumber,
       sessionId,
@@ -69,18 +69,18 @@ router.post('/generate/:sessionId', async (req, res) => {
       grandTotal,
       paymentStatus: 'pending'
     });
-    
+
     await newBill.save();
-    
+
     // Update table status to billing
     await Table.findByIdAndUpdate(session.tableId, { status: 'billing' });
-    
+
     // Populate before emitting
     await newBill.populate('tableId', 'tableNumber');
-    
+
     const io = socket.getIO();
     io.to(session.restaurantId.toString()).emit('new-bill', newBill);
-    
+
     const fullBill = await appendUpiDetails(newBill, restaurant);
     res.status(201).json(fullBill);
   } catch (err) {
@@ -105,27 +105,27 @@ router.get('/:restaurantId', auth, async (req, res) => {
 router.put('/:id/pay', auth, async (req, res) => {
   try {
     const { paymentMethod } = req.body;
-    
+
     const bill = await Bill.findByIdAndUpdate(
       req.params.id,
       { paymentStatus: 'paid', paymentMethod, paidAt: new Date() },
       { new: true }
     );
-    
+
     if (!bill) return res.status(404).json({ message: 'Bill not found' });
-    
+
     // Close the session
     await Session.findByIdAndUpdate(bill.sessionId, { status: 'closed', closedAt: new Date() });
-    
+
     // Free the table
     await Table.findByIdAndUpdate(bill.tableId, { status: 'available' });
-    
+
     // Delete table session cache (optional, but good practice if relying on socket for table clear)
     const io = socket.getIO();
     io.to(bill.restaurantId.toString()).emit('bill-paid', bill);
     io.to(bill.sessionId.toString()).emit('bill-paid', bill);
     io.to(bill.sessionId.toString()).emit('session-closed', bill);
-    
+
     res.json(bill);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
@@ -138,7 +138,7 @@ router.get('/session/:sessionId', async (req, res) => {
     const bill = await Bill.findOne({ sessionId: req.params.sessionId })
       .populate('tableId', 'tableNumber')
       .populate({ path: 'restaurantId', select: 'name address phone gstNumber logo taxSettings upiId' });
-      
+
     if (!bill) return res.status(404).json({ message: 'Bill not found' });
     const fullBill = await appendUpiDetails(bill, bill.restaurantId);
     res.json(fullBill);

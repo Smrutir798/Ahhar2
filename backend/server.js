@@ -25,6 +25,7 @@ const purchaseOrderRoutes = require('./routes/purchaseOrderRoutes');
 const recipeRoutes = require('./routes/recipeRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const printerRoutes = require('./routes/printerRoutes');
 const http = require('http');
 const socket = require('./socket');
 
@@ -110,6 +111,7 @@ app.use('/api/purchase-orders', purchaseOrderRoutes);
 app.use('/api/recipes', recipeRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/printer', printerRoutes);
 
 // ─── Error handling ──────────────────────────────────────
 app.use((err, req, res, next) => {

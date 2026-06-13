@@ -5,9 +5,12 @@ const sessionSchema = new mongoose.Schema({
   restaurantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Restaurant', required: true },
   status: { type: String, enum: ['active', 'closed'], default: 'active' },
   totalAmount: { type: Number, default: 0 },
+  customerName: { type: String, default: '' },
+  customerPhone: { type: String, default: '' },
   startedAt: { type: Date, default: Date.now },
   closedAt: { type: Date },
   cart: [{
+    cartItemId: { type: String, required: true }, // For atomic operations
     menuItemId: { type: mongoose.Schema.Types.ObjectId, ref: 'MenuItem', required: true },
     name: { type: String, required: true },
     price: { type: Number, required: true }, // Base price
