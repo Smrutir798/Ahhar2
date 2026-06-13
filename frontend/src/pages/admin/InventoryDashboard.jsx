@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from '@/lib/axios';
 import { AuthContext } from '../../context/AuthContext';
-import { Package, AlertTriangle, XCircle, IndianRupee, Activity, Plus } from 'lucide-react';
+import { Package, AlertTriangle, XOctagon, IndianRupee, Activity, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 const InventoryDashboard = () => {

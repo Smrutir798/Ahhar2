@@ -105,6 +105,44 @@ const CustomerOrders = () => {
     }
   };
 
+  const handleRazorpayPayment = async () => {
+    try {
+      const { data: orderData } = await axios.post('/payments/create-order', { billId: generatedBill._id });
+      
+      const options = {
+        key: orderData.key,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "Ahhar Restaurant",
+        description: `Bill ${generatedBill.billNumber}`,
+        order_id: orderData.orderId,
+        handler: async function (response) {
+          try {
+            await axios.post('/payments/verify', {
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+              billId: generatedBill._id
+            });
+          } catch (err) {
+            alert("Payment verification failed.");
+          }
+        },
+        prefill: { name: "Customer" },
+        theme: { color: "#000000" }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response){
+        alert("Payment failed: " + response.error.description);
+      });
+      rzp.open();
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || "Failed to initiate payment");
+    }
+  };
+
   const submitFeedback = async () => {
     try {
       await axios.post('/feedback', {
@@ -337,7 +375,7 @@ const CustomerOrders = () => {
               </div>
               <div className="grid grid-cols-2 gap-3 mt-auto">
                 <Button variant="outline" className="w-full h-12 rounded-full font-bold" onClick={downloadPDF}>Download PDF</Button>
-                <Button className="w-full h-12 rounded-full font-bold" onClick={() => setShowFeedback(true)}>Test Payment</Button>
+                <Button className="w-full h-12 rounded-full font-bold" onClick={handleRazorpayPayment}>Pay via Razorpay</Button>
               </div>
             </div>
           </div>
