@@ -24,6 +24,7 @@ const supplierRoutes = require('./routes/supplierRoutes');
 const purchaseOrderRoutes = require('./routes/purchaseOrderRoutes');
 const recipeRoutes = require('./routes/recipeRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 const http = require('http');
 const socket = require('./socket');
 
@@ -108,6 +109,7 @@ app.use('/api/suppliers', supplierRoutes);
 app.use('/api/purchase-orders', purchaseOrderRoutes);
 app.use('/api/recipes', recipeRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // ─── Error handling ──────────────────────────────────────
 app.use((err, req, res, next) => {
