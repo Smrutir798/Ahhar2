@@ -2,10 +2,115 @@ import React, { useState, useEffect, useContext } from 'react';
 import axios from '@/lib/axios';
 import { AuthContext } from '../../context/AuthContext';
 import useSocket from '../../hooks/useSocket';
-import { FileText, CheckCircle, Banknote, CreditCard, QrCode, Printer, Search } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
+import { connectUSBPrinter, printToUSB, printToNetwork } from '../../utils/printer';
+import { Printer, Banknote, QrCode, CreditCard, CheckCircle, FileDown, Search, FileText } from 'lucide-react';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+
+// Existing imports remain unchanged
+
+// Updated handlePrint to auto-connect USB printer if not connected
+const handlePrint = async (bill, type) => {
+  try {
+    const token = localStorage.getItem('token');
+    const res = await axios.get(`/customer/orders/session/${bill.sessionId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const orders = res.data;
+    const allItems = [];
+    orders.forEach(order => {
+      order.items.forEach(item => {
+        allItems.push({
+          menuItem: { name: item.name },
+          quantity: item.quantity,
+          price: item.price
+        });
+      });
+    });
+    const printBill = { ...bill, items: allItems };
+
+    if (type === 'usb') {
+      try {
+        await printToUSB(printBill);
+      } catch (err) {
+        if (err.message && err.message.includes('No USB printer connected')) {
+          await connectUSBPrinter();
+          await printToUSB(printBill);
+        } else {
+          throw err;
+        }
+      }
+    } else {
+      await printToNetwork(printBill);
+    }
+  } catch (err) {
+    alert(err.message || 'Failed to print');
+  }
+};
+
+// New function to export bill as PDF using jspdf
+const handleExportPdf = async (bill) => {
+  try {
+    const token = localStorage.getItem('token');
+    const res = await axios.get(`/customer/orders/session/${bill.sessionId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const orders = res.data;
+    const allItems = [];
+    orders.forEach(order => {
+      order.items.forEach(item => {
+        allItems.push({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price
+        });
+      });
+    });
+
+    const doc = new jsPDF();
+    doc.setFontSize(12);
+    doc.text(`Bill #${bill.billNumber || bill._id.slice(-6)}`, 14, 20);
+    doc.text(`Table: ${bill.tableId?.tableNumber || 'N/A'}`, 14, 28);
+    doc.text(`Date: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 14, 36);
+
+    const headers = [['Item', 'Qty', 'Price']];
+    const rows = allItems.map(item => [
+      item.name.substring(0, 20) || 'Unknown',
+      item.quantity.toString(),
+      `Rs. ${(item.quantity * item.price).toFixed(2)}`
+    ]);
+
+    autoTable(doc, {
+      startY: 45,
+      head: headers,
+      body: rows,
+      theme: 'grid',
+      headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0] },
+      styles: { fontSize: 10 }
+    });
+
+    let finalY = doc.lastAutoTable.finalY + 10;
+    doc.setFontSize(12);
+    doc.text(`Subtotal: Rs. ${bill.subtotal?.toFixed(2)}`, 14, finalY);
+    doc.text(`CGST: Rs. ${bill.cgst?.toFixed(2) || '0.00'}`, 14, finalY + 6);
+    doc.text(`SGST: Rs. ${bill.sgst?.toFixed(2) || '0.00'}`, 14, finalY + 12);
+    let totalY = finalY + 18;
+    if (bill.serviceCharge > 0) {
+      doc.text(`Service Charge: Rs. ${bill.serviceCharge?.toFixed(2)}`, 14, totalY);
+      totalY += 6;
+    }
+    doc.text(`TOTAL: Rs. ${bill.grandTotal?.toFixed(2)}`, 14, totalY);
+
+    doc.save(`Bill_${bill.billNumber || bill._id.slice(-6)}.pdf`);
+  } catch (err) {
+    console.error('Failed to generate PDF', err);
+    alert('Failed to generate PDF. Could not fetch items.');
+  }
+};
+
 
 const BillingDashboard = () => {
   const { user } = useContext(AuthContext);
@@ -247,7 +352,17 @@ const BillingDashboard = () => {
               <div className="p-4 border-t border-border/10 bg-foreground/5">
                 {bill.paymentStatus === 'pending' ? (
                   <div className="space-y-3">
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider text-center mb-1">Process Payment</p>
+                    <div className="flex justify-between items-center mb-1">
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Process Payment</p>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => handlePrint(bill, 'usb')} title="Print via USB" className="h-6 w-6 text-muted-foreground hover:text-foreground">
+                          <Printer size={12} />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleExportPdf(bill)} title="Export PDF" className="h-6 w-6 text-muted-foreground hover:text-foreground">
+                          <FileDown size={12} />
+                        </Button>
+                      </div>
+                    </div>
                     <div className="grid grid-cols-3 gap-2">
                       <Button 
                         variant="outline"
@@ -283,9 +398,20 @@ const BillingDashboard = () => {
                     <div className="flex items-center text-emerald-500 font-bold">
                       <CheckCircle size={16} className="mr-1.5" /> Paid via {bill.paymentMethod?.toUpperCase()}
                     </div>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-foreground/10 text-muted-foreground hover:text-foreground">
-                      <Printer size={16} />
-                    </Button>
+                    <div className="flex gap-1 relative">
+                      <Button variant="ghost" size="icon" onClick={() => handlePrint(bill, 'usb')} title="Print USB" className="h-8 w-8 hover:bg-foreground/10 text-muted-foreground hover:text-foreground flex flex-col items-center relative group">
+                        <Printer size={16} />
+                        <span className="text-[8px] absolute -bottom-1 opacity-0 group-hover:opacity-100">USB</span>
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handlePrint(bill, 'network')} title="Print Network" className="h-8 w-8 hover:bg-foreground/10 text-muted-foreground hover:text-foreground flex flex-col items-center relative group">
+                        <Printer size={16} />
+                        <span className="text-[8px] absolute -bottom-1 opacity-0 group-hover:opacity-100">NET</span>
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleExportPdf(bill)} title="Export PDF" className="h-8 w-8 hover:bg-foreground/10 text-muted-foreground hover:text-foreground flex flex-col items-center relative group">
+                        <FileDown size={16} />
+                        <span className="text-[8px] absolute -bottom-1 opacity-0 group-hover:opacity-100">PDF</span>
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>

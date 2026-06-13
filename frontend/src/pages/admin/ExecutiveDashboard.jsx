@@ -59,14 +59,14 @@ const ExecutiveDashboard = () => {
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-6 text-foreground">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold font-heading bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground/90 to-foreground/50">Executive Dashboard</h1>
           <p className="text-muted-foreground mt-1 font-sans">Real-time overview of your restaurant's performance</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => handleExport('revenue')}><Download size={16} className="mr-2" /> Export Revenue</Button>
-          <Button variant="outline" onClick={() => handleExport('orders')}><Download size={16} className="mr-2" /> Export Orders</Button>
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
+          <Button variant="outline" className="flex-1 md:flex-none" onClick={() => handleExport('revenue')}><Download size={16} className="mr-2" /> Export Revenue</Button>
+          <Button variant="outline" className="flex-1 md:flex-none" onClick={() => handleExport('orders')}><Download size={16} className="mr-2" /> Export Orders</Button>
         </div>
       </div>
 

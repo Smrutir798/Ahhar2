@@ -99,7 +99,7 @@ const Menu = () => {
             
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="price">Price ($)</Label>
+                <Label htmlFor="price">Price (₹)</Label>
                 <Input id="price" type="number" step="0.01" required value={newItem.price} onChange={e => setNewItem({...newItem, price: e.target.value})} />
               </div>
               <div className="grid gap-2">
@@ -132,7 +132,7 @@ const Menu = () => {
                   <CardTitle className="text-xl">{item.name}</CardTitle>
                   <CardDescription className="mt-1">{item.categoryId?.name}</CardDescription>
                 </div>
-                <div className="text-lg font-bold text-primary">${item.price}</div>
+                <div className="text-lg font-bold text-primary">₹{item.price}</div>
               </div>
               {item.description && <p className="text-sm text-muted-foreground mt-2">{item.description}</p>}
             </CardHeader>

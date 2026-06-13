@@ -2,14 +2,16 @@ import React, { useContext, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from '@/lib/axios';
 import { CartContext } from '../../context/CartContext';
-import { ArrowLeft, Trash2, Plus, Minus } from 'lucide-react';
+import { ArrowLeft, Trash2, Plus, Minus, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 
 const CustomerCart = () => {
   const { tableId } = useParams();
   const navigate = useNavigate();
   const { cart, cartTotal, updateQuantity, removeFromCart, clearCart, session } = useContext(CartContext);
   const [isPlacing, setIsPlacing] = useState(false);
+  const isOnline = useNetworkStatus();
 
   const handlePlaceOrder = async () => {
     if (!session || cart.length === 0) return;
@@ -61,6 +63,13 @@ const CustomerCart = () => {
         </button>
         <h1 className="text-xl font-bold text-foreground font-heading flex-1">Order Summary</h1>
       </div>
+
+      {!isOnline && (
+        <div className="bg-red-500 text-white px-4 py-3 flex items-center gap-2 justify-center text-sm font-medium">
+          <WifiOff size={16} />
+          You are offline. Please reconnect to place your order.
+        </div>
+      )}
 
       {/* Cart Items */}
       <div className="p-4 flex flex-col gap-3">
@@ -122,17 +131,19 @@ const CustomerCart = () => {
         </div>
       </div>
 
-      {/* Bottom Action */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-card/60 backdrop-blur-xl border-t border-border/40 z-20 flex justify-center">
-        <div className="w-full max-w-md">
-          <Button 
-            className="w-full h-14 rounded-full text-lg font-bold shadow-lg shadow-foreground/5"
-            onClick={handlePlaceOrder}
-            disabled={isPlacing}
-          >
-            {isPlacing ? 'Placing Order...' : 'Place Order'}
-          </Button>
+      {/* Checkout Footer */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-xl border-t border-border z-20 pb-safe">
+        <div className="flex justify-between items-center mb-4">
+          <span className="font-bold text-foreground font-heading">Total (excl. taxes)</span>
+          <span className="text-2xl font-black text-foreground font-heading">₹{cartTotal}</span>
         </div>
+        <Button 
+          className="w-full h-14 rounded-2xl text-lg font-bold shadow-lg flex items-center justify-center gap-2"
+          onClick={handlePlaceOrder}
+          disabled={isPlacing || !isOnline}
+        >
+          {isPlacing ? 'Placing Order...' : 'Place Order'}
+        </Button>
       </div>
     </div>
   );

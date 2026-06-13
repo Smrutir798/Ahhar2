@@ -171,7 +171,7 @@ const CustomerOrders = () => {
         doc.text(`Date: ${new Date(generatedBill.generatedAt).toLocaleString()}`, 14, 38);
         doc.text(`Table No: ${generatedBill.tableId?.tableNumber || '?'}`, 14, 44);
         
-        const tableColumn = ["Item", "Qty", "Total (Rs)"];
+        const tableColumn = ["Item", "Qty", "Total (Rs.)"];
         const tableRows = [];
         
         orders.forEach(order => {

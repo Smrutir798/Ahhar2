@@ -11,7 +11,7 @@ const ServiceNotifications = () => {
   const dropdownRef = useRef(null);
   
   // Audio for notification
-  const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+  const notificationSound = new Audio('/alert.mp3');
 
   useEffect(() => {
     const fetchRequests = async () => {

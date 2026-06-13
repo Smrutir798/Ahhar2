@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useRef } from 'react';
 import axios from '@/lib/axios';
 import useSocket from '../../hooks/useSocket';
 import { AuthContext } from '../../context/AuthContext';
@@ -18,40 +18,49 @@ const KitchenDashboard = () => {
   const [stats, setStats] = useState({ pending: 0, preparing: 0, ready: 0, today: 0 });
 
   const [isAudioUnlocked, setIsAudioUnlocked] = useState(false);
+  const audioRef = useRef(null);
 
-  // Synthesized double-tone chime using Web Audio API to bypass external dependencies and resolve browser autoplay issues
+  useEffect(() => {
+    audioRef.current = new Audio('/alert.mp3');
+    audioRef.current.loop = true;
+  }, []);
+
+  const unlockAudio = () => {
+    try {
+      if (audioRef.current) {
+        audioRef.current.play().then(() => {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+          setIsAudioUnlocked(true);
+        }).catch(e => {
+          console.log('Audio unlock failed', e);
+        });
+      }
+    } catch (e) {
+      console.log('Audio unlock error', e);
+    }
+  };
+
+  // Play the alert sound
   const playChime = () => {
     try {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContext) return;
-      const ctx = new AudioContext();
-      
-      if (ctx.state === 'suspended') {
-        ctx.resume();
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().then(() => {
+          setIsAudioUnlocked(true);
+        }).catch(e => {
+          console.log('Audio playback blocked or failed', e);
+        });
       }
-
-      const playTone = (freq, startTime, duration) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, startTime);
-        
-        gain.gain.setValueAtTime(0, startTime);
-        gain.gain.linearRampToValueAtTime(0.2, startTime + 0.03);
-        gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration - 0.02);
-        
-        osc.start(startTime);
-        osc.stop(startTime + duration);
-      };
-
-      const now = ctx.currentTime;
-      playTone(587.33, now, 0.12); // D5 chime
-      playTone(880.00, now + 0.12, 0.25); // A5 chime
-      setIsAudioUnlocked(true);
     } catch (e) {
-      console.log('Audio playback blocked or failed', e);
+      console.log('Audio playback failed', e);
+    }
+  };
+
+  const stopChime = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
     }
   };
 
@@ -90,8 +99,15 @@ const KitchenDashboard = () => {
 
   useEffect(() => {
     // Calculate stats
+    const pendingCount = orders.filter(o => o.status === 'pending').length;
+    
+    // Auto-stop chime if there are no pending orders (e.g. accepted from another device)
+    if (pendingCount === 0) {
+      stopChime();
+    }
+
     setStats({
-      pending: orders.filter(o => o.status === 'pending').length,
+      pending: pendingCount,
       preparing: orders.filter(o => o.status === 'preparing' || o.status === 'accepted').length,
       ready: orders.filter(o => o.status === 'ready').length,
       today: orders.length // Simplification
@@ -99,6 +115,9 @@ const KitchenDashboard = () => {
   }, [orders]);
 
   const updateStatus = async (orderId, status) => {
+    if (status === 'accepted') {
+      stopChime();
+    }
     try {
       const token = localStorage.getItem('token');
       await axios.put(`/kitchen/orders/${orderId}/status`, { status }, {
@@ -215,7 +234,7 @@ const KitchenDashboard = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={playChime}
+              onClick={unlockAudio}
               className={`font-semibold flex items-center gap-2 transition-all duration-300 ${
                 isAudioUnlocked 
                   ? 'border-emerald-500/20 text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10' 

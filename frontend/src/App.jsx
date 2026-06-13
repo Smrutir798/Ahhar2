@@ -15,6 +15,7 @@ import CustomerLayout from './pages/customer/CustomerLayout';
 import CustomerMenu from './pages/customer/CustomerMenu';
 import CustomerCart from './pages/customer/CustomerCart';
 import CustomerOrders from './pages/customer/CustomerOrders';
+import CustomerSessionEnded from './pages/customer/CustomerSessionEnded';
 import BillingDashboard from './pages/admin/BillingDashboard';
 import RevenueDashboard from './pages/admin/RevenueDashboard';
 import ServiceAnalytics from './pages/admin/ServiceAnalytics';
@@ -63,6 +64,7 @@ const App = () => {
           <Route index element={<CustomerMenu />} />
           <Route path="cart" element={<CustomerCart />} />
           <Route path="history" element={<CustomerOrders />} />
+          <Route path="ended" element={<CustomerSessionEnded />} />
         </Route>
 
         {/* ThinkDifferent Dashboard */}

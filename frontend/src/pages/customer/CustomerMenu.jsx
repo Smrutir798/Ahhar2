@@ -2,8 +2,9 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from '@/lib/axios';
 import { CartContext } from '../../context/CartContext';
-import { Search, ShoppingBag, Plus, Minus, X, Receipt } from 'lucide-react';
+import { Search, ShoppingBag, Plus, Minus, X, Receipt, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import CustomerWelcome from './CustomerWelcome';
 
 const CustomerMenu = () => {
   const { tableId } = useParams();
@@ -22,6 +23,7 @@ const CustomerMenu = () => {
   const [quantity, setQuantity] = useState(1);
   const [instructions, setInstructions] = useState('');
   const [selectedModifiers, setSelectedModifiers] = useState([]);
+  const [geofenceError, setGeofenceError] = useState(null);
   
   const handleSelectSingleModifier = (modifierName, option) => {
     setSelectedModifiers(prev => {
@@ -54,12 +56,11 @@ const CustomerMenu = () => {
         setCategories(menuRes.data.categories);
         setItems(menuRes.data.items);
 
-        // 3. Create or Get Session
-        const sessionRes = await axios.post('/customer/session/create', {
-          tableId: tableId,
-          restaurantId: tableRes.data.restaurant._id
-        });
-        setSession(sessionRes.data);
+        // 3. Check if session exists
+        const sessionRes = await axios.get(`/customer/session/${tableId}`);
+        if (sessionRes.data) {
+          setSession(sessionRes.data);
+        }
         
         setLoading(false);
       } catch (err) {
@@ -69,6 +70,33 @@ const CustomerMenu = () => {
     };
     fetchData();
   }, [tableId, setSession]);
+
+  useEffect(() => {
+    if (restaurant && restaurant.geofence && restaurant.geofence.enabled) {
+      if (!navigator.geolocation) {
+        setGeofenceError('Geolocation is not supported by your browser.');
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          import('../../utils/geofence').then(({ calculateDistance }) => {
+            const dist = calculateDistance(
+              position.coords.latitude,
+              position.coords.longitude,
+              restaurant.geofence.latitude,
+              restaurant.geofence.longitude
+            );
+            if (dist > restaurant.geofence.radius) {
+              setGeofenceError(`You must be at the restaurant to order. You are ${Math.round(dist)} meters away.`);
+            }
+          });
+        },
+        (error) => {
+          setGeofenceError('Location permission is required to order from this restaurant.');
+        }
+      );
+    }
+  }, [restaurant]);
 
   const filteredItems = items.filter(item => {
     const matchesSearch = item.name?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -100,6 +128,39 @@ const CustomerMenu = () => {
 
   if (loading) return <div className="flex-1 flex items-center justify-center">Loading Menu...</div>;
   if (!table) return <div className="flex-1 flex items-center justify-center">Invalid Table QR Code</div>;
+
+  if (geofenceError) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center min-h-screen bg-gray-50">
+        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4 text-red-500">
+          <MapPin size={32} />
+        </div>
+        <h2 className="text-xl font-bold mb-2 text-gray-900">Location Required</h2>
+        <p className="text-gray-600 mb-6">{geofenceError}</p>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <CustomerWelcome 
+      restaurantName={restaurant?.name} 
+      tableNumber={table?.tableNumber} 
+      onSubmit={async (name, phone) => {
+        try {
+          const res = await axios.post('/customer/session/create', {
+            tableId,
+            restaurantId: restaurant._id,
+            customerName: name,
+            customerPhone: phone
+          });
+          setSession(res.data);
+        } catch(err) {
+          console.error('Failed to create session', err);
+          alert('Failed to start session. Please try again.');
+        }
+      }}
+    />;
+  }
 
   return (
     <div className="flex flex-col flex-1 bg-transparent pb-24 text-foreground">

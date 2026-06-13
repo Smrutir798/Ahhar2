@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { LayoutDashboard, Users, TableProperties, Menu, Utensils, Settings, LogOut, Receipt, BarChart, Activity, BellRing, Search, Truck, ClipboardList, ChefHat, Check, QrCode, TrendingUp, Package } from 'lucide-react';
+import { LayoutDashboard, Users, TableProperties, Menu, X, Utensils, Settings, LogOut, Receipt, BarChart, Activity, BellRing, Search, Truck, ClipboardList, ChefHat, Check, QrCode, TrendingUp, Package, Printer } from 'lucide-react';
 import axios from '@/lib/axios';
 import ServiceNotifications from '../components/ServiceNotifications';
 
@@ -9,6 +9,7 @@ const DashboardLayout = () => {
   const { user, logout } = useContext(AuthContext);
   const location = useLocation();
   const [restaurantName, setRestaurantName] = useState('My Restaurant');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const fetchRestaurant = async () => {
@@ -24,6 +25,14 @@ const DashboardLayout = () => {
       }
     };
     fetchRestaurant();
+
+    const handleUpdate = (e) => {
+      if (e.detail && e.detail.name) {
+        setRestaurantName(e.detail.name);
+      }
+    };
+    window.addEventListener('restaurant-updated', handleUpdate);
+    return () => window.removeEventListener('restaurant-updated', handleUpdate);
   }, []);
 
   const navItems = [
@@ -55,14 +64,28 @@ const DashboardLayout = () => {
 
   return (
     <div className="flex h-screen w-full bg-background text-foreground overflow-hidden">
-      <aside className="hidden w-64 flex-col border-r border-border bg-background sm:flex z-10">
-        <div className="flex h-[60px] items-center px-6">
-          <Link to="/" className="flex items-center gap-2 font-bold font-heading text-xl text-foreground">
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 sm:hidden" 
+          onClick={() => setIsMobileMenuOpen(false)} 
+        />
+      )}
+
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 flex flex-col border-r border-border bg-background transform transition-transform duration-300 ease-in-out sm:relative sm:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="flex h-[60px] items-center justify-between px-6">
+          <Link to="/" className="flex items-center gap-2 font-bold font-heading text-xl text-foreground" onClick={() => setIsMobileMenuOpen(false)}>
             <div className="flex h-8 w-8 items-center justify-center rounded bg-foreground text-background text-sm font-bold">
               {restaurantName.charAt(0).toUpperCase()}
             </div>
             <span>{restaurantName}</span>
           </Link>
+          <button 
+            className="sm:hidden text-muted-foreground hover:text-foreground" 
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <X className="h-6 w-6" />
+          </button>
         </div>
         <div className="flex-1 overflow-auto py-4 hide-scrollbar">
           <nav className="grid items-start px-4 text-sm font-medium gap-1.5">
@@ -70,6 +93,7 @@ const DashboardLayout = () => {
               <Link
                 key={item.name}
                 to={item.path}
+                onClick={() => setIsMobileMenuOpen(false)}
                 className={`flex items-center gap-3 rounded-md px-3 py-2.5 transition-all duration-200 ${
                   location.pathname === item.path 
                     ? 'bg-foreground text-background font-semibold' 
@@ -102,6 +126,12 @@ const DashboardLayout = () => {
       <div className="flex flex-col flex-1 overflow-hidden bg-[#fafafa]">
         <header className="flex h-[60px] items-center justify-between border-b border-border bg-background px-6 z-10">
           <div className="flex items-center gap-4 flex-1">
+            <button 
+              className="sm:hidden p-2 -ml-2 text-muted-foreground hover:text-foreground"
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <Menu className="h-6 w-6" />
+            </button>
             <div className="hidden sm:flex items-center text-sm text-muted-foreground">
               {restaurantName} <span className="mx-2">/</span> <span className="font-medium text-foreground">{navItems.find(i => i.path === location.pathname)?.name || 'Dashboard'}</span>
             </div>
