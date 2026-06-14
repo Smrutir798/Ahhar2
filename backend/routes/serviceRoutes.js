@@ -20,7 +20,7 @@ router.get('/', auth, async (req, res) => {
       restaurantId,
       status: { $in: ['pending', 'accepted', 'completed'] } // Waiter dashboard needs all 3
     })
-    .populate('tableId', 'tableNumber')
+    .populate('tableId', 'tableNumber assignedWaiter')
     .populate('assignedTo', 'name')
     .sort({ createdAt: -1 });
     

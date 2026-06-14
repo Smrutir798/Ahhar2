@@ -26,6 +26,9 @@ const recipeRoutes = require('./routes/recipeRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const printerRoutes = require('./routes/printerRoutes');
+const subscriptionRoutes = require('./routes/subscriptionRoutes');
+const staffRoutes = require('./routes/staffRoutes');
+const requireFeature = require('./middleware/requireFeature');
 const http = require('http');
 const socket = require('./socket');
 
@@ -97,6 +100,7 @@ mongoose.connect(process.env.MONGO_URI)
 app.use('/api/auth', authRoutes);
 app.use('/api/restaurant', restaurantRoutes);
 app.use('/api/tables', tableRoutes);
+app.use('/api/staff', staffRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/customer', customerRoutes);
@@ -104,14 +108,17 @@ app.use('/api/kitchen', kitchenRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/bills', billRoutes);
 app.use('/api/analytics', analyticsRoutes);
+const auth = require('./middleware/auth');
+
 app.use('/api/feedback', feedbackRoutes);
-app.use('/api/inventory', inventoryRoutes);
-app.use('/api/suppliers', supplierRoutes);
-app.use('/api/purchase-orders', purchaseOrderRoutes);
-app.use('/api/recipes', recipeRoutes);
-app.use('/api/reports', reportRoutes);
+app.use('/api/inventory', auth, requireFeature(['premium']), inventoryRoutes);
+app.use('/api/suppliers', auth, requireFeature(['premium']), supplierRoutes);
+app.use('/api/purchase-orders', auth, requireFeature(['premium']), purchaseOrderRoutes);
+app.use('/api/recipes', auth, requireFeature(['premium']), recipeRoutes);
+app.use('/api/reports', auth, requireFeature(['premium']), reportRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/printer', printerRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
 
 // ─── Error handling ──────────────────────────────────────
 app.use((err, req, res, next) => {

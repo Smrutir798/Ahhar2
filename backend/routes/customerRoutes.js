@@ -12,7 +12,7 @@ const socket = require('../socket');
 // Get Table & Restaurant Info
 router.get('/table/:tableId', async (req, res) => {
   try {
-    const table = await Table.findById(req.params.tableId).populate('ownerId');
+    const table = await Table.findById(req.params.tableId).populate('ownerId').populate('assignedWaiter', 'name email');
     if (!table) return res.status(404).json({ message: 'Table not found' });
     
     const restaurant = await Restaurant.findOne({ ownerId: table.ownerId._id });
@@ -286,6 +286,25 @@ router.delete('/session/:sessionId/cart', async (req, res) => {
     io.to(req.params.sessionId).emit('cart-updated', session.cart);
     
     res.json(session.cart);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Cancel an empty session
+router.delete('/session/:sessionId', async (req, res) => {
+  try {
+    const session = await Session.findById(req.params.sessionId);
+    if (!session) return res.status(404).json({ message: 'Session not found' });
+    
+    await Session.findByIdAndDelete(req.params.sessionId);
+    await Table.findByIdAndUpdate(session.tableId, { status: 'available' });
+    
+    const io = socket.getIO();
+    io.to(session.restaurantId.toString()).emit('session-closed', session);
+    
+    res.json({ message: 'Session cancelled' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });

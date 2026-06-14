@@ -5,6 +5,7 @@ const tableSchema = new mongoose.Schema({
   tableNumber: { type: Number, required: true },
   capacity: { type: Number, required: true },
   status: { type: String, enum: ['available', 'occupied', 'billing'], default: 'available' },
+  assignedWaiter: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   qrCodeUrl: { type: String } // Store the data URI or image URL of the QR code
 }, { timestamps: true });
 

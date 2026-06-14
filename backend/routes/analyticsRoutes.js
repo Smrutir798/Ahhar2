@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
+const requireFeature = require('../middleware/requireFeature');
 const mongoose = require('mongoose');
+
+const requirePremium = requireFeature(['premium']);
 
 const Bill = require('../models/Bill');
 const Order = require('../models/Order');
@@ -14,7 +17,7 @@ const Ingredient = require('../models/Ingredient');
 const MenuItem = require('../models/MenuItem');
 const Category = require('../models/Category');
 
-// Executive Dashboard
+// Executive Dashboard (Available on all plans)
 router.get('/executive', auth, async (req, res) => {
   try {
     const restaurantId = req.user.restaurantId;
@@ -64,7 +67,7 @@ router.get('/executive', auth, async (req, res) => {
 });
 
 // Service Analytics (for Customer Feedback BI)
-router.get('/services/:restaurantId', auth, async (req, res) => {
+router.get('/services/:restaurantId', auth, requirePremium, async (req, res) => {
   try {
     const restaurantId = new mongoose.Types.ObjectId(req.params.restaurantId);
     
@@ -101,7 +104,7 @@ router.get('/services/:restaurantId', auth, async (req, res) => {
 });
 
 // Revenue Analytics
-router.get('/revenue', auth, async (req, res) => {
+router.get('/revenue', auth, requirePremium, async (req, res) => {
   try {
     const restaurantId = new mongoose.Types.ObjectId(req.user.restaurantId);
     
@@ -133,7 +136,7 @@ router.get('/revenue', auth, async (req, res) => {
 });
 
 // Menu Analytics (Best Sellers)
-router.get('/menu', auth, async (req, res) => {
+router.get('/menu', auth, requirePremium, async (req, res) => {
   try {
     const restaurantId = new mongoose.Types.ObjectId(req.user.restaurantId);
 
@@ -157,7 +160,7 @@ router.get('/menu', auth, async (req, res) => {
 });
 
 // Peak Hours
-router.get('/peak-hours', auth, async (req, res) => {
+router.get('/peak-hours', auth, requirePremium, async (req, res) => {
   try {
     const restaurantId = new mongoose.Types.ObjectId(req.user.restaurantId);
     const peakHours = await Order.aggregate([
@@ -176,7 +179,7 @@ router.get('/peak-hours', auth, async (req, res) => {
 });
 
 // Staff Performance
-router.get('/staff', auth, async (req, res) => {
+router.get('/staff', auth, requirePremium, async (req, res) => {
   try {
     const restaurantId = new mongoose.Types.ObjectId(req.user.restaurantId);
     
@@ -192,14 +195,62 @@ router.get('/staff', auth, async (req, res) => {
     requests.forEach(r => totalWaitTime += (new Date(r.completedAt) - new Date(r.createdAt)));
     const avgWaitTimeMins = requests.length > 0 ? Math.round(totalWaitTime / requests.length / 60000) : 0;
 
-    res.json({ avgPrepTimeMins, avgWaitTimeMins, ordersPrepared: orders.length, requestsCompleted: requests.length });
+    // Fetch individual waiter performance
+    const User = require('../models/User');
+    const waiters = await User.find({ restaurantId, role: 'waiter' }).select('name email phone');
+    const waiterStats = [];
+
+    for (const waiter of waiters) {
+      // Tables assigned to this waiter
+      const assignedTables = await Table.find({ assignedWaiter: waiter._id }).select('tableNumber');
+      
+      // Requests resolved / active for this waiter
+      const completedReqs = await ServiceRequest.find({ restaurantId, assignedTo: waiter._id, status: 'completed' });
+      const activeReqsCount = await ServiceRequest.countDocuments({ restaurantId, assignedTo: waiter._id, status: 'accepted' });
+
+      let totalFulfillTime = 0;
+      completedReqs.forEach(r => {
+        if (r.completedAt) {
+          totalFulfillTime += (new Date(r.completedAt) - new Date(r.createdAt));
+        }
+      });
+      const avgFulfillTimeMins = completedReqs.length > 0 ? Math.round(totalFulfillTime / completedReqs.length / 60000) : 0;
+
+      waiterStats.push({
+        _id: waiter._id,
+        name: waiter.name,
+        email: waiter.email,
+        phone: waiter.phone,
+        assignedTables: assignedTables.map(t => t.tableNumber).sort((a,b)=>a-b),
+        requestsCompleted: completedReqs.length,
+        activeRequestsCount: activeReqsCount,
+        avgFulfillTimeMins
+      });
+    }
+
+    // Fetch recent/live service requests for task monitoring
+    const recentRequests = await ServiceRequest.find({ restaurantId })
+      .populate('tableId', 'tableNumber')
+      .populate('assignedTo', 'name')
+      .sort({ createdAt: -1 })
+      .limit(15);
+
+    res.json({ 
+      avgPrepTimeMins, 
+      avgWaitTimeMins, 
+      ordersPrepared: orders.length, 
+      requestsCompleted: requests.length,
+      waiters: waiterStats,
+      recentRequests
+    });
   } catch (err) {
+    console.error('Staff performance fetch error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
 // Inventory Consumption
-router.get('/inventory', auth, async (req, res) => {
+router.get('/inventory', auth, requirePremium, async (req, res) => {
   try {
     const restaurantId = new mongoose.Types.ObjectId(req.user.restaurantId);
     
@@ -224,7 +275,7 @@ router.get('/inventory', auth, async (req, res) => {
 });
 
 // AI Insights Heuristics
-router.get('/insights', auth, async (req, res) => {
+router.get('/insights', auth, requirePremium, async (req, res) => {
   try {
     const restaurantId = req.user.restaurantId;
     const insights = [];
@@ -261,7 +312,7 @@ router.get('/insights', auth, async (req, res) => {
 });
 
 // Profit Analytics
-router.get('/profit', auth, async (req, res) => {
+router.get('/profit', auth, requirePremium, async (req, res) => {
   try {
     const restaurantId = new mongoose.Types.ObjectId(req.user.restaurantId);
     
@@ -292,7 +343,7 @@ router.get('/profit', auth, async (req, res) => {
 });
 
 // Customer Analytics
-router.get('/customers', auth, async (req, res) => {
+router.get('/customers', auth, requirePremium, async (req, res) => {
   try {
     const restaurantId = new mongoose.Types.ObjectId(req.user.restaurantId);
     
@@ -315,7 +366,7 @@ router.get('/customers', auth, async (req, res) => {
 });
 
 // Order Analytics
-router.get('/orders', auth, async (req, res) => {
+router.get('/orders', auth, requirePremium, async (req, res) => {
   try {
     const restaurantId = new mongoose.Types.ObjectId(req.user.restaurantId);
     

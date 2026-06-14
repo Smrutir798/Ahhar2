@@ -12,7 +12,9 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    const user = await User.findOne({ email });
+    const user = await User.findOne({
+      $or: [{ email }, { phone: email }]
+    });
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
@@ -64,7 +66,7 @@ router.put('/orders/:id/status', auth, async (req, res) => {
       req.params.id,
       updateData,
       { new: true }
-    );
+    ).populate('tableId', 'tableNumber').exec();
     
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
