@@ -12,6 +12,67 @@ const formatTimeAgo = (dateString) => {
   return `${diffInMinutes} min ago`;
 };
 
+const OrderCard = ({ order, updateStatus }) => (
+  <Card className="p-4 mb-3 flex flex-col hover:border-foreground/30 hover:shadow-lg transition-all duration-300">
+    <div className="flex justify-between items-start mb-3 border-b border-border/10 pb-2">
+      <div>
+        <h3 className="font-bold font-heading text-foreground text-lg">Table {order.tableId?.tableNumber || '?'}</h3>
+        <p className="text-xs text-muted-foreground">{order.orderNumber}</p>
+      </div>
+      <div className="flex items-center gap-1.5 text-foreground/80 bg-foreground/5 border border-border/20 px-2.5 py-1 rounded-lg text-xs font-semibold">
+        <Clock size={12} />
+        {formatTimeAgo(order.createdAt)}
+      </div>
+    </div>
+    
+    <div className="flex-1 space-y-2 mb-4">
+      {order.items.map((item, idx) => (
+        <div key={idx} className="flex flex-col text-sm">
+          <div className="flex justify-between w-full text-foreground/90">
+            <div className="flex gap-2">
+              <span className="font-bold text-foreground">{item.quantity}x</span>
+              <span className="font-medium">{item.name}</span>
+            </div>
+          </div>
+          {item.selectedModifiers && item.selectedModifiers.length > 0 && (
+            <p className="text-xs text-muted-foreground ml-6">
+              + {item.selectedModifiers.map(m => `${m.name}: ${m.option}`).join(', ')}
+            </p>
+          )}
+          {item.instructions && (
+            <p className="text-xs text-destructive bg-destructive/5 border border-destructive/10 rounded-md px-2 py-1 mt-1 ml-6 max-w-full break-words">
+              Note: {item.instructions}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+
+    <div className="mt-auto flex gap-2">
+      {order.status === 'pending' && (
+        <Button onClick={() => updateStatus(order._id, 'accepted')} className="flex-1 font-semibold">
+          Accept
+        </Button>
+      )}
+      {order.status === 'accepted' && (
+        <Button onClick={() => updateStatus(order._id, 'preparing')} className="flex-1 font-semibold">
+          Start Cooking
+        </Button>
+      )}
+      {order.status === 'preparing' && (
+        <Button onClick={() => updateStatus(order._id, 'ready')} className="flex-1 font-semibold">
+          Mark Ready
+        </Button>
+      )}
+      {order.status === 'ready' && (
+        <Button onClick={() => updateStatus(order._id, 'served')} variant="outline" className="flex-1 font-semibold">
+          Mark Served
+        </Button>
+      )}
+    </div>
+  </Card>
+);
+
 const KitchenDashboard = () => {
   const { user, logout } = useContext(AuthContext);
   const [orders, setOrders] = useState([]);
@@ -129,67 +190,6 @@ const KitchenDashboard = () => {
     }
   };
 
-  const OrderCard = ({ order }) => (
-    <Card className="p-4 mb-3 flex flex-col hover:border-foreground/30 hover:shadow-lg transition-all duration-300">
-      <div className="flex justify-between items-start mb-3 border-b border-border/10 pb-2">
-        <div>
-          <h3 className="font-bold font-heading text-foreground text-lg">Table {order.tableId?.tableNumber || '?'}</h3>
-          <p className="text-xs text-muted-foreground">{order.orderNumber}</p>
-        </div>
-        <div className="flex items-center gap-1.5 text-foreground/80 bg-foreground/5 border border-border/20 px-2.5 py-1 rounded-lg text-xs font-semibold">
-          <Clock size={12} />
-          {formatTimeAgo(order.createdAt)}
-        </div>
-      </div>
-      
-      <div className="flex-1 space-y-2 mb-4">
-        {order.items.map((item, idx) => (
-          <div key={idx} className="flex flex-col text-sm">
-            <div className="flex justify-between w-full text-foreground/90">
-              <div className="flex gap-2">
-                <span className="font-bold text-foreground">{item.quantity}x</span>
-                <span className="font-medium">{item.name}</span>
-              </div>
-            </div>
-            {item.selectedModifiers && item.selectedModifiers.length > 0 && (
-              <p className="text-xs text-muted-foreground ml-6">
-                + {item.selectedModifiers.map(m => `${m.name}: ${m.option}`).join(', ')}
-              </p>
-            )}
-            {item.instructions && (
-              <p className="text-xs text-destructive bg-destructive/5 border border-destructive/10 rounded-md px-2 py-1 mt-1 ml-6 max-w-full break-words">
-                Note: {item.instructions}
-              </p>
-            )}
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-auto flex gap-2">
-        {order.status === 'pending' && (
-          <Button onClick={() => updateStatus(order._id, 'accepted')} className="flex-1 font-semibold">
-            Accept
-          </Button>
-        )}
-        {order.status === 'accepted' && (
-          <Button onClick={() => updateStatus(order._id, 'preparing')} className="flex-1 font-semibold">
-            Start Cooking
-          </Button>
-        )}
-        {order.status === 'preparing' && (
-          <Button onClick={() => updateStatus(order._id, 'ready')} className="flex-1 font-semibold">
-            Mark Ready
-          </Button>
-        )}
-        {order.status === 'ready' && (
-          <Button onClick={() => updateStatus(order._id, 'served')} variant="outline" className="flex-1 font-semibold">
-            Mark Served
-          </Button>
-        )}
-      </div>
-    </Card>
-  );
-
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans relative overflow-hidden">
       {/* Background blobs for premium glassmorphism */}
@@ -274,7 +274,7 @@ const KitchenDashboard = () => {
             </div>
             <div className="flex-1 overflow-y-auto pr-1 pb-4 space-y-3 scrollbar-thin scrollbar-thumb-border">
               {orders.filter(o => o.status === 'pending').map(order => (
-                <OrderCard key={order._id} order={order} />
+                <OrderCard key={order._id} order={order} updateStatus={updateStatus} />
               ))}
             </div>
           </div>
@@ -291,7 +291,7 @@ const KitchenDashboard = () => {
             </div>
             <div className="flex-1 overflow-y-auto pr-1 pb-4 space-y-3 scrollbar-thin scrollbar-thumb-border">
               {orders.filter(o => o.status === 'accepted' || o.status === 'preparing').map(order => (
-                <OrderCard key={order._id} order={order} />
+                <OrderCard key={order._id} order={order} updateStatus={updateStatus} />
               ))}
             </div>
           </div>
@@ -308,7 +308,7 @@ const KitchenDashboard = () => {
             </div>
             <div className="flex-1 overflow-y-auto pr-1 pb-4 space-y-3 scrollbar-thin scrollbar-thumb-border">
               {orders.filter(o => o.status === 'ready').map(order => (
-                <OrderCard key={order._id} order={order} />
+                <OrderCard key={order._id} order={order} updateStatus={updateStatus} />
               ))}
             </div>
           </div>

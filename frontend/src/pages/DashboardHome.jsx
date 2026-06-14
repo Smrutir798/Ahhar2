@@ -1,9 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
+import { Navigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 import axios from '@/lib/axios';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Utensils, TableProperties, CheckCircle, TrendingUp } from 'lucide-react';
 
 const DashboardHome = () => {
+  const { user } = useContext(AuthContext);
+
+  if (user?.role === 'waiter') {
+    return <Navigate to="/waiter-ops" replace />;
+  }
+
   const [stats, setStats] = useState({
     totalTables: 0,
     activeTables: 0,

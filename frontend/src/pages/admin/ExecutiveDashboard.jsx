@@ -72,29 +72,47 @@ const ExecutiveDashboard = () => {
 
       {/* KPI Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <Card className="p-4 flex flex-col justify-between hover:border-foreground/25 transition-all duration-300">
-          <div className="text-muted-foreground text-sm flex items-center"><IndianRupee size={14} className="mr-1" /> Today's Revenue</div>
-          <div className="text-2xl font-bold font-heading mt-2">₹{data?.todaysRevenue || 0}</div>
+        <Card 
+          style={{ background: '#EAF3DE', border: '0.5px solid #C0DD97' }}
+          className="p-4 flex flex-col justify-between transition-all duration-300 hover:opacity-90"
+        >
+          <div className="text-[#3B6D11] text-sm flex items-center"><IndianRupee size={14} className="mr-1" /> Today's Revenue</div>
+          <div className="text-2xl font-bold font-heading mt-2 text-[#27500A]">₹{data?.todaysRevenue || 0}</div>
         </Card>
-        <Card className="p-4 flex flex-col justify-between hover:border-foreground/25 transition-all duration-300">
-          <div className="text-muted-foreground text-sm flex items-center"><TrendingUp size={14} className="mr-1" /> Monthly Rev.</div>
-          <div className="text-2xl font-bold font-heading mt-2">₹{data?.monthlyRevenue || 0}</div>
+        <Card 
+          style={{ background: '#EAF3DE', border: '0.5px solid #C0DD97' }}
+          className="p-4 flex flex-col justify-between transition-all duration-300 hover:opacity-90"
+        >
+          <div className="text-[#3B6D11] text-sm flex items-center"><TrendingUp size={14} className="mr-1" /> Monthly Rev.</div>
+          <div className="text-2xl font-bold font-heading mt-2 text-[#27500A]">₹{data?.monthlyRevenue || 0}</div>
         </Card>
-        <Card className="p-4 flex flex-col justify-between hover:border-foreground/25 transition-all duration-300">
-          <div className="text-muted-foreground text-sm flex items-center"><IndianRupee size={14} className="mr-1" /> Est. Profit</div>
-          <div className="text-2xl font-bold font-heading mt-2">₹{profit?.profit || 0}</div>
+        <Card 
+          style={{ background: '#EAF3DE', border: '0.5px solid #C0DD97' }}
+          className="p-4 flex flex-col justify-between transition-all duration-300 hover:opacity-90"
+        >
+          <div className="text-[#3B6D11] text-sm flex items-center"><IndianRupee size={14} className="mr-1" /> Est. Profit</div>
+          <div className="text-2xl font-bold font-heading mt-2 text-[#27500A]">₹{profit?.profit || 0}</div>
         </Card>
-        <Card className="p-4 flex flex-col justify-between hover:border-foreground/25 transition-all duration-300">
-          <div className="text-muted-foreground text-sm flex items-center"><ShoppingBag size={14} className="mr-1" /> Orders Today</div>
-          <div className="text-2xl font-bold font-heading mt-2">{data?.todayOrders || 0}</div>
+        <Card 
+          style={{ background: '#E6F1FB', border: '0.5px solid #B5D4F4' }}
+          className="p-4 flex flex-col justify-between transition-all duration-300 hover:opacity-90"
+        >
+          <div className="text-[#185FA5] text-sm flex items-center"><ShoppingBag size={14} className="mr-1" /> Orders Today</div>
+          <div className="text-2xl font-bold font-heading mt-2 text-[#0C447C]">{data?.todayOrders || 0}</div>
         </Card>
-        <Card className="p-4 flex flex-col justify-between hover:border-foreground/25 transition-all duration-300">
-          <div className="text-muted-foreground text-sm flex items-center"><IndianRupee size={14} className="mr-1" /> Avg Order</div>
-          <div className="text-2xl font-bold font-heading mt-2">₹{data?.avgOrderValue || 0}</div>
+        <Card 
+          style={{ background: '#E6F1FB', border: '0.5px solid #B5D4F4' }}
+          className="p-4 flex flex-col justify-between transition-all duration-300 hover:opacity-90"
+        >
+          <div className="text-[#185FA5] text-sm flex items-center"><IndianRupee size={14} className="mr-1" /> Avg Order</div>
+          <div className="text-2xl font-bold font-heading mt-2 text-[#0C447C]">₹{data?.avgOrderValue || 0}</div>
         </Card>
-        <Card className="p-4 flex flex-col justify-between hover:border-foreground/25 transition-all duration-300">
-          <div className="text-muted-foreground text-sm flex items-center"><Users size={14} className="mr-1" /> Rating</div>
-          <div className="text-2xl font-bold font-heading mt-2">★ {data?.rating || '0.0'}</div>
+        <Card 
+          style={{ background: '#FAEEDA', border: '0.5px solid #FAC775' }}
+          className="p-4 flex flex-col justify-between transition-all duration-300 hover:opacity-90"
+        >
+          <div className="text-[#854F0B] text-sm flex items-center"><Users size={14} className="mr-1" /> Rating</div>
+          <div className="text-2xl font-bold font-heading mt-2 text-[#633806]">★ {data?.rating || '0.0'}</div>
         </Card>
       </div>
 
@@ -105,31 +123,38 @@ const ExecutiveDashboard = () => {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {insights.map((insight, idx) => (
-            <div key={idx} className="p-4 rounded-xl border border-border bg-foreground/5 flex items-start gap-3 hover:border-foreground/20 transition-all duration-300">
-              <AlertTriangle className="text-amber-500 mt-0.5 flex-shrink-0" size={16} />
-              <p className="text-sm font-medium font-sans text-foreground">{insight.text}</p>
+            <div 
+              key={idx} 
+              style={{ background: '#EEEDFE', border: '0.5px solid #CECBF6' }}
+              className="p-4 rounded-xl flex items-start gap-3 transition-all duration-300 hover:opacity-90"
+            >
+              <AlertTriangle className="text-[#534AB7] mt-0.5 flex-shrink-0" size={16} />
+              <p className="text-sm font-medium font-sans text-[#3C3489]">{insight.text}</p>
             </div>
           ))}
         </div>
       </div>
       
       {/* Profit Breakdown */}
-      <Card className="mt-8 p-6 hover:border-foreground/25 transition-all duration-300">
-        <h2 className="text-xl font-bold font-heading mb-4">Financial Health (All Time)</h2>
-        <div className="flex flex-col md:flex-row justify-between items-center border-t border-border/40 pt-4 font-sans">
+      <Card 
+        style={{ background: '#EAF3DE', border: '0.5px solid #C0DD97' }}
+        className="mt-8 p-6 transition-all duration-300 hover:opacity-95"
+      >
+        <h2 className="text-xl font-bold font-heading mb-4 text-[#27500A]">Financial Health (All Time)</h2>
+        <div className="flex flex-col md:flex-row justify-between items-center border-t border-[#C0DD97]/60 pt-4 font-sans">
           <div className="text-center w-full mb-4 md:mb-0">
-            <p className="text-muted-foreground text-sm">Total Revenue</p>
-            <p className="text-2xl font-bold text-foreground">₹{profit?.revenue || 0}</p>
+            <p className="text-[#3B6D11] text-sm">Total Revenue</p>
+            <p className="text-2xl font-bold text-[#27500A]">₹{profit?.revenue || 0}</p>
           </div>
-          <div className="text-2xl font-light text-muted-foreground/30 hidden md:block">-</div>
+          <div className="text-2xl font-light text-[#3B6D11]/30 hidden md:block">-</div>
           <div className="text-center w-full mb-4 md:mb-0">
-            <p className="text-muted-foreground text-sm">Inventory & Waste Cost</p>
-            <p className="text-2xl font-bold text-foreground">₹{profit?.cost || 0}</p>
+            <p className="text-[#854F0B] text-sm">Inventory & Waste Cost</p>
+            <p className="text-2xl font-bold text-[#854F0B]">₹{profit?.cost || 0}</p>
           </div>
-          <div className="text-2xl font-light text-muted-foreground/30 hidden md:block">=</div>
+          <div className="text-2xl font-light text-[#3B6D11]/30 hidden md:block">=</div>
           <div className="text-center w-full">
-            <p className="text-muted-foreground text-sm font-semibold">Estimated Profit</p>
-            <p className="text-3xl font-bold text-foreground font-heading">₹{profit?.profit || 0}</p>
+            <p className="text-[#3B6D11] text-sm font-semibold">Estimated Profit</p>
+            <p className="text-3xl font-bold text-[#27500A] font-heading">₹{profit?.profit || 0}</p>
           </div>
         </div>
       </Card>

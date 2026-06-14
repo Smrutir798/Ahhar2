@@ -3,7 +3,7 @@ import axios from '@/lib/axios';
 import { AuthContext } from '../../context/AuthContext';
 import useSocket from '../../hooks/useSocket';
 import { connectUSBPrinter, printToUSB, printToNetwork } from '../../utils/printer';
-import { Printer, Banknote, QrCode, CreditCard, CheckCircle, FileDown, Search, FileText } from 'lucide-react';
+import { Printer, Banknote, QrCode, CreditCard, CheckCircle, FileDown, Search, FileText, ChevronDown } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -115,8 +115,9 @@ const handleExportPdf = async (bill) => {
 const BillingDashboard = () => {
   const { user } = useContext(AuthContext);
   const [bills, setBills] = useState([]);
+  const [activeTables, setActiveTables] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('pending'); // 'pending' | 'completed'
+  const [activeTab, setActiveTab] = useState('active'); // 'active' | 'pending' | 'completed'
 
   const [searchQuery, setSearchQuery] = useState('');
   const [amountFilter, setAmountFilter] = useState('all'); // 'all' | 'under200' | '200to500' | 'over500'
@@ -136,20 +137,37 @@ const BillingDashboard = () => {
     }
   };
 
+  const fetchActiveTables = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get('/tables/live-status', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setActiveTables(res.data.filter(t => t.activeSession));
+    } catch (err) {
+      console.error('Failed to fetch active tables', err);
+    }
+  };
+
   useEffect(() => {
     if (user?.restaurantId) {
       fetchBills();
+      fetchActiveTables();
     }
   }, [user]);
 
   // Listen for new bills and paid bills
-  useSocket({ type: 'restaurant', id: user?.restaurantId }, {
+  useSocket({ type: 'restaurant', id: user?.restaurantId || user?._id || user?.id }, {
     'new-bill': (newBill) => {
       setBills(prev => [newBill, ...prev]);
+      fetchActiveTables();
     },
     'bill-paid': (paidBill) => {
       setBills(prev => prev.map(b => b._id === paidBill._id ? paidBill : b));
-    }
+      fetchActiveTables();
+    },
+    'new-order': () => fetchActiveTables(),
+    'table-occupied': () => fetchActiveTables()
   });
 
   const markAsPaid = async (billId, paymentMethod) => {
@@ -163,6 +181,21 @@ const BillingDashboard = () => {
     } catch (err) {
       console.error('Failed to mark as paid', err);
       alert('Error processing payment');
+    }
+  };
+
+  const handleGenerateBill = async (sessionId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.post(`/bills/generate/${sessionId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // The socket event will trigger fetchActiveTables and setBills, but we can do it optimistically or just wait.
+      // We will also manually switch tab.
+      setActiveTab('pending');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to generate bill');
     }
   };
 
@@ -219,6 +252,12 @@ const BillingDashboard = () => {
         </div>
         
         <div className="glass p-1 rounded-xl flex border border-border/10 shadow-sm w-fit">
+          <button 
+            className={`px-4 py-2 rounded-lg font-bold font-sans text-sm transition-all duration-300 ${activeTab === 'active' ? 'bg-foreground text-background shadow-md' : 'text-muted-foreground hover:text-foreground'}`}
+            onClick={() => setActiveTab('active')}
+          >
+            Active Tables ({activeTables.length})
+          </button>
           <button 
             className={`px-4 py-2 rounded-lg font-bold font-sans text-sm transition-all duration-300 ${activeTab === 'pending' ? 'bg-foreground text-background shadow-md' : 'text-muted-foreground hover:text-foreground'}`}
             onClick={() => setActiveTab('pending')}
@@ -301,7 +340,87 @@ const BillingDashboard = () => {
 
       {/* Grid of Bills */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredBills.length === 0 ? (
+        {activeTab === 'active' ? (
+          activeTables.length === 0 ? (
+            <div className="col-span-full py-16 text-center glass border border-dashed border-border/20 rounded-2xl">
+              <FileText size={48} className="mx-auto text-muted-foreground/40 mb-4 animate-pulse" />
+              <h3 className="text-lg font-bold font-heading text-foreground">No Active Tables</h3>
+              <p className="text-sm text-muted-foreground mt-1">No tables are currently occupied.</p>
+            </div>
+          ) : (
+            activeTables.map(table => (
+              <Card key={table._id} className="overflow-hidden flex flex-col hover:border-foreground/30 hover:shadow-md transition-all duration-300">
+                <div className="p-4 border-b border-border/10 bg-foreground/5 flex justify-between items-start">
+                  <div>
+                    <h3 className="font-bold font-heading text-foreground text-lg">Table {table.tableNumber}</h3>
+                    <p className="text-xs text-muted-foreground font-mono">Customer: {table.activeSession?.customerName || 'Guest'}</p>
+                  </div>
+                  <div className="px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-500/10 text-blue-500 border border-blue-500/25">
+                    OCCUPIED
+                  </div>
+                </div>
+                
+                <div className="p-4 flex-1 text-sm font-sans space-y-3 overflow-y-auto max-h-[300px]">
+                  {table.orders?.length > 0 ? table.orders.map(order => (
+                    <details key={order._id} className="bg-foreground/5 rounded-lg border border-border/10 group">
+                      <summary className="flex justify-between items-center p-3 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-muted-foreground">Order #{order.orderNumber}</span>
+                          <ChevronDown size={14} className="text-muted-foreground transition-transform group-open:rotate-180" />
+                        </div>
+                        <span className="text-[10px] font-bold bg-background text-muted-foreground px-2 py-0.5 rounded shadow-sm border border-border/20">
+                          {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </summary>
+                      <div className="p-3 pt-0 border-t border-border/10 mt-1 space-y-1">
+                        {order.items.map((item, i) => (
+                          <div key={i} className="flex justify-between text-xs font-medium">
+                            <span className="text-muted-foreground">{item.quantity}x {item.name}</span>
+                            <span className="text-foreground">₹{(item.price * item.quantity).toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  )) : (
+                    <div className="text-center text-muted-foreground text-xs py-4">No orders placed yet.</div>
+                  )}
+                </div>
+                
+                <div className="p-4 border-t border-border/10 bg-foreground/5 space-y-2">
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Subtotal</span>
+                    <span>₹{table.billPreview?.subtotal?.toFixed(2) || '0.00'}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground/80">
+                    <span>CGST</span>
+                    <span>₹{table.billPreview?.cgst?.toFixed(2) || '0.00'}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground/80">
+                    <span>SGST</span>
+                    <span>₹{table.billPreview?.sgst?.toFixed(2) || '0.00'}</span>
+                  </div>
+                  {table.billPreview?.serviceCharge > 0 && (
+                    <div className="flex justify-between text-xs text-muted-foreground/80">
+                      <span>Service Charge</span>
+                      <span>₹{table.billPreview?.serviceCharge?.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center mb-3 pt-2 border-t border-border/10">
+                    <span className="font-bold font-heading text-foreground">Grand Total</span>
+                    <span className="font-bold font-heading text-xl text-foreground">₹{table.billPreview?.grandTotal?.toFixed(2) || '0.00'}</span>
+                  </div>
+                  <Button 
+                    className="w-full font-bold font-heading shadow-md" 
+                    onClick={() => handleGenerateBill(table.activeSession._id)}
+                    disabled={!table.orders || table.orders.length === 0}
+                  >
+                    Generate Bill
+                  </Button>
+                </div>
+              </Card>
+            ))
+          )
+        ) : filteredBills.length === 0 ? (
           <div className="col-span-full py-16 text-center glass border border-dashed border-border/20 rounded-2xl">
             <FileText size={48} className="mx-auto text-muted-foreground/40 mb-4 animate-pulse" />
             <h3 className="text-lg font-bold font-heading text-foreground">No matches found</h3>

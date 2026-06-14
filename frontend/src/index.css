@@ -4,6 +4,26 @@
 
 @layer base {
   :root {
+    /* AHHAR Semantic Color Tokens */
+    --color-revenue-bg  : #EAF3DE;
+    --color-revenue-bd  : #C0DD97;
+    --color-revenue-lbl : #3B6D11;
+    --color-revenue-val : #27500A;
+    --color-kpi-bg      : #E6F1FB;
+    --color-kpi-bd      : #B5D4F4;
+    --color-kpi-lbl     : #185FA5;
+    --color-kpi-val     : #0C447C;
+    --color-rating-bg   : #FAEEDA;
+    --color-rating-bd   : #FAC775;
+    --color-rating-lbl  : #854F0B;
+    --color-rating-val  : #633806;
+    --color-insight-bg  : #EEEDFE;
+    --color-insight-bd  : #CECBF6;
+    --color-insight-txt : #3C3489;
+    --color-alert-bg    : #FCEBEB;
+    --color-alert-bd    : #F7C1C1;
+    --color-alert-txt   : #A32D2D;
+
     /* Color Palette (Strict Monochromatic) */
     --bg-primary: #ffffff;
     --bg-secondary: #fafafa;

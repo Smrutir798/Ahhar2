@@ -345,6 +345,7 @@ const CustomerOrders = () => {
           <div className="bg-card border border-border w-full sm:max-w-md h-[85vh] sm:h-auto rounded-t-3xl sm:rounded-3xl flex flex-col overflow-hidden shadow-2xl">
             <div className="bg-foreground/5 border-b border-border/40 p-4 text-center relative shrink-0">
               <h2 className="font-bold text-lg text-foreground font-heading">Your Bill</h2>
+              <p className="text-sm text-muted-foreground font-medium mt-1">Table {generatedBill.tableId?.tableNumber || '?'}</p>
               <button onClick={() => setGeneratedBill(null)} className="absolute right-4 top-4 text-foreground font-bold hover:scale-105 transition-transform">✕</button>
             </div>
             

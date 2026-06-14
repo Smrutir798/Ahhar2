@@ -22,6 +22,11 @@ import ServiceAnalytics from './pages/admin/ServiceAnalytics';
 import Settings from './pages/admin/Settings';
 import KitchenDashboard from './pages/kitchen/KitchenDashboard';
 import WaiterDashboard from './pages/waiter/WaiterDashboard';
+import WaiterOrderLayout from './pages/waiter/WaiterOrderLayout';
+import WaiterOrderTables from './pages/waiter/WaiterOrderTables';
+import WaiterOrderMenu from './pages/waiter/WaiterOrderMenu';
+import WaiterOrderCart from './pages/waiter/WaiterOrderCart';
+import WaiterOrderHistory from './pages/waiter/WaiterOrderHistory';
 import InventoryDashboard from './pages/admin/InventoryDashboard';
 import SupplierDashboard from './pages/admin/SupplierDashboard';
 import PurchaseOrders from './pages/admin/PurchaseOrders';
@@ -29,7 +34,10 @@ import RecipeManager from './pages/admin/RecipeManager';
 import InventoryAnalytics from './pages/admin/InventoryAnalytics';
 import ExecutiveDashboard from './pages/admin/ExecutiveDashboard';
 import StaffAnalytics from './pages/admin/StaffAnalytics';
+import StaffManagement from './pages/admin/StaffManagement';
 import ThinkDifferentDashboard from './pages/admin/ThinkDifferentDashboard';
+
+import NotFound from './pages/NotFound';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useContext(AuthContext);
@@ -38,7 +46,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     if (user.role === 'kitchen') return <Navigate to="/kitchen" />;
     if (user.role === 'thinkdifferent') return <Navigate to="/thinkdifferent" />;
-    if (user.role === 'waiter') return <Navigate to="/waiter" />;
+    if (user.role === 'waiter') return <Navigate to="/waiter-ops" />;
     
     // Prevent infinite redirect loops by displaying an error message instead of redirecting to '/'
     return (
@@ -81,9 +89,22 @@ const App = () => {
           </ProtectedRoute>
         } />
 
-        {/* Admin Dashboard */}
-        {/* Waiter Dashboard */}
+
+
+        {/* Waiter Dashboard & Ops */}
         <Route path="/waiter" element={<ProtectedRoute allowedRoles={['admin', 'owner', 'waiter']}><WaiterDashboard /></ProtectedRoute>} />
+        
+        {/* Waiter Captain App Flow */}
+        <Route path="/waiter/order" element={
+          <ProtectedRoute allowedRoles={['admin', 'owner', 'waiter']}>
+            <WaiterOrderLayout />
+          </ProtectedRoute>
+        }>
+          <Route index element={<WaiterOrderTables />} />
+          <Route path=":tableId" element={<WaiterOrderMenu />} />
+          <Route path=":tableId/cart" element={<WaiterOrderCart />} />
+          <Route path=":tableId/history" element={<WaiterOrderHistory />} />
+        </Route>
 
         <Route path="/" element={
           <ProtectedRoute allowedRoles={['admin', 'owner', 'cashier', 'waiter', 'inventory_manager']}>
@@ -93,6 +114,7 @@ const App = () => {
           <Route index element={<DashboardHome />} />
           <Route path="restaurant-profile" element={<RestaurantProfile />} />
           <Route path="tables" element={<Tables />} />
+          <Route path="staff" element={<StaffManagement />} />
           <Route path="categories" element={<Categories />} />
           <Route path="menu" element={<Menu />} />
           <Route path="billing" element={<BillingDashboard />} />
@@ -110,6 +132,11 @@ const App = () => {
           <Route path="recipes" element={<RecipeManager />} />
           <Route path="inventory-analytics" element={<InventoryAnalytics />} />
         </Route>
+
+        {/* 404 Fallback */}
+        <Route path="*" element={<NotFound />} />
+        {/* Redirect common mistypes like /owner/dashboard to / */}
+        <Route path="/owner/dashboard" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

@@ -53,7 +53,7 @@ const Login = () => {
       } else if (user?.role === 'kitchen') {
         navigationPath = '/kitchen';
       } else if (user?.role === 'waiter') {
-        navigationPath = '/waiter';
+        navigationPath = '/waiter-ops';
       }
       
       console.log('[Login] Will navigate to:', navigationPath);
@@ -80,8 +80,8 @@ const Login = () => {
             {error && <div className="text-red-500 text-sm font-medium text-center">{error}</div>}
             
             <div className="grid gap-1.5">
-              <Label htmlFor="email" className="text-[11px] uppercase tracking-wider font-bold text-foreground">Email Address</Label>
-              <Input id="email" type="email" placeholder="owner@thinkdifferent.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12 rounded-lg border-border/60 bg-white shadow-sm" />
+              <Label htmlFor="email" className="text-[11px] uppercase tracking-wider font-bold text-foreground">Email or Phone Number</Label>
+              <Input id="email" type="text" placeholder="owner@thinkdifferent.com or 9876543210" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12 rounded-lg border-border/60 bg-white shadow-sm" />
             </div>
             
             <div className="grid gap-1.5">

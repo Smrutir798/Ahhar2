@@ -84,36 +84,48 @@ const InventoryDashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-6 rounded-xl border shadow-sm">
+        <div 
+          style={{ background: '#E6F1FB', border: '0.5px solid #B5D4F4' }}
+          className="p-6 rounded-xl transition-all duration-300 hover:opacity-90"
+        >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-gray-500 text-sm">Total Ingredients</h3>
-            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Package size={20} /></div>
+            <h3 className="font-bold text-[#185FA5] text-sm">Total Ingredients</h3>
+            <div className="p-2 bg-[#0C447C]/10 text-[#0C447C] rounded-lg"><Package size={20} /></div>
           </div>
-          <p className="text-3xl font-bold text-gray-900">{totalIngredients}</p>
+          <p className="text-3xl font-bold text-[#0C447C]">{totalIngredients}</p>
         </div>
 
-        <div className="bg-white p-6 rounded-xl border shadow-sm">
+        <div 
+          style={{ background: '#FCEBEB', border: '0.5px solid #F7C1C1' }}
+          className="p-6 rounded-xl transition-all duration-300 hover:opacity-90"
+        >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-gray-500 text-sm">Low Stock Alert</h3>
-            <div className="p-2 bg-orange-50 text-orange-600 rounded-lg"><AlertTriangle size={20} /></div>
+            <h3 className="font-bold text-[#A32D2D] text-sm">Low Stock Alert</h3>
+            <div className="p-2 bg-[#A32D2D]/10 text-[#A32D2D] rounded-lg"><AlertTriangle size={20} /></div>
           </div>
-          <p className="text-3xl font-bold text-orange-600">{lowStock}</p>
+          <p className="text-3xl font-bold text-[#A32D2D]">{lowStock}</p>
         </div>
 
-        <div className="bg-white p-6 rounded-xl border shadow-sm">
+        <div 
+          style={{ background: '#FCEBEB', border: '0.5px solid #F7C1C1' }}
+          className="p-6 rounded-xl transition-all duration-300 hover:opacity-90"
+        >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-gray-500 text-sm">Out of Stock</h3>
-            <div className="p-2 bg-red-50 text-red-600 rounded-lg"><XOctagon size={20} /></div>
+            <h3 className="font-bold text-[#A32D2D] text-sm">Out of Stock</h3>
+            <div className="p-2 bg-[#A32D2D]/10 text-[#A32D2D] rounded-lg"><XOctagon size={20} /></div>
           </div>
-          <p className="text-3xl font-bold text-red-600">{outOfStock}</p>
+          <p className="text-3xl font-bold text-[#A32D2D]">{outOfStock}</p>
         </div>
 
-        <div className="bg-white p-6 rounded-xl border shadow-sm">
+        <div 
+          style={{ background: '#E6F1FB', border: '0.5px solid #B5D4F4' }}
+          className="p-6 rounded-xl transition-all duration-300 hover:opacity-90"
+        >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-gray-500 text-sm">Inventory Value</h3>
-            <div className="p-2 bg-green-50 text-green-600 rounded-lg"><IndianRupee size={20} /></div>
+            <h3 className="font-bold text-[#185FA5] text-sm">Inventory Value</h3>
+            <div className="p-2 bg-[#0C447C]/10 text-[#0C447C] rounded-lg"><IndianRupee size={20} /></div>
           </div>
-          <p className="text-3xl font-bold text-gray-900">₹{inventoryValue.toLocaleString()}</p>
+          <p className="text-3xl font-bold text-[#0C447C]">₹{inventoryValue.toLocaleString()}</p>
         </div>
       </div>
 
@@ -139,11 +151,11 @@ const InventoryDashboard = () => {
                   <td className="px-6 py-4 font-bold text-gray-900">{ing.name}</td>
                   <td className="px-6 py-4 text-gray-600">{ing.category}</td>
                   <td className="px-6 py-4">
-                    <span className={`font-bold ${isOut ? 'text-red-600' : isLow ? 'text-orange-600' : 'text-green-600'}`}>
+                    <span className={`font-bold ${isOut || isLow ? 'text-[#A32D2D]' : 'text-green-600'}`}>
                       {ing.currentStock} {ing.unit}
                     </span>
-                    {isOut && <span className="ml-2 text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full uppercase">Out of Stock</span>}
-                    {isLow && <span className="ml-2 text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full uppercase">Low Stock</span>}
+                    {isOut && <span style={{ border: '0.5px solid #F7C1C1' }} className="ml-2 text-[10px] bg-[#FCEBEB] text-[#A32D2D] px-2 py-0.5 rounded-full uppercase font-bold">Out of Stock</span>}
+                    {isLow && <span style={{ border: '0.5px solid #F7C1C1' }} className="ml-2 text-[10px] bg-[#FCEBEB] text-[#A32D2D] px-2 py-0.5 rounded-full uppercase font-bold">Low Stock</span>}
                   </td>
                   <td className="px-6 py-4 text-gray-600">{ing.minimumStock} {ing.unit}</td>
                   <td className="px-6 py-4 text-gray-600">₹{ing.purchasePrice}</td>

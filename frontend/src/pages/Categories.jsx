@@ -43,42 +43,66 @@ const Categories = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Category Management</h1>
+    <div className="space-y-6 pb-12">
+      <div>
+        <h1 className="text-3xl font-bold font-heading bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground/80 to-foreground/50">Category Management</h1>
+        <p className="text-muted-foreground mt-1 text-sm font-sans">Manage your menu categories and groupings.</p>
+      </div>
       
-      <Card className="max-w-xl">
-        <CardHeader>
-          <CardTitle>Add New Category</CardTitle>
-          <CardDescription>Create a category to group your menu items.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleAddCategory} className="flex flex-col gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Category Name</Label>
-              <Input id="name" placeholder="e.g. Starters" required value={newCategory.name} onChange={e => setNewCategory({...newCategory, name: e.target.value})} />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="description">Description (Optional)</Label>
-              <Input id="description" placeholder="Short description" value={newCategory.description} onChange={e => setNewCategory({...newCategory, description: e.target.value})} />
-            </div>
-            <Button type="submit" className="self-end">Add Category</Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {categories.map(category => (
-          <Card key={category._id}>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">{category.name}</CardTitle>
-              {category.description && <CardDescription>{category.description}</CardDescription>}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* Form Card - Left Column */}
+        <div className="lg:col-span-1">
+          <Card className="bg-white border shadow-sm">
+            <CardHeader>
+              <CardTitle className="font-heading">Add New Category</CardTitle>
+              <CardDescription className="font-sans">Create a category to group your menu items.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="destructive" size="sm" onClick={() => handleDelete(category._id)}>Delete</Button>
+              <form onSubmit={handleAddCategory} className="flex flex-col gap-4 font-sans">
+                <div className="grid gap-2">
+                  <Label htmlFor="name" className="text-xs font-bold text-gray-500">Category Name</Label>
+                  <Input id="name" placeholder="e.g. Starters" required value={newCategory.name} onChange={e => setNewCategory({...newCategory, name: e.target.value})} className="bg-gray-50 border-gray-200" />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="description" className="text-xs font-bold text-gray-500">Description (Optional)</Label>
+                  <Input id="description" placeholder="Short description" value={newCategory.description} onChange={e => setNewCategory({...newCategory, description: e.target.value})} className="bg-gray-50 border-gray-200" />
+                </div>
+                <Button type="submit" className="w-full font-bold">Add Category</Button>
+              </form>
             </CardContent>
           </Card>
-        ))}
-        {categories.length === 0 && <p className="text-muted-foreground col-span-full">No categories found. Add one above.</p>}
+        </div>
+
+        {/* Existing Categories - Right Column */}
+        <div className="lg:col-span-2 space-y-4">
+          <h2 className="text-lg font-bold font-heading">Existing Categories</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {categories.map(category => (
+              <Card key={category._id} className="bg-white border shadow-sm flex flex-col justify-between hover:border-black/20 hover:shadow-md transition-all duration-300">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-bold font-heading text-black">{category.name}</CardTitle>
+                  {category.description && <CardDescription className="text-xs text-gray-500 font-sans">{category.description}</CardDescription>}
+                </CardHeader>
+                <CardContent className="pt-0 flex justify-end">
+                  <Button 
+                    variant="outline" 
+                    style={{ background: '#FCEBEB', border: '0.5px solid #F7C1C1', color: '#A32D2D' }}
+                    size="sm" 
+                    className="hover:opacity-90 transition-all duration-300 font-bold text-xs"
+                    onClick={() => handleDelete(category._id)}
+                  >
+                    Delete
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+            {categories.length === 0 && (
+              <p className="text-gray-400 col-span-full font-sans text-sm p-8 text-center border-2 border-dashed border-gray-200 rounded-[20px]">
+                No categories found. Add one on the left.
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

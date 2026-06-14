@@ -22,6 +22,27 @@ export default {
   theme: {
     extend: {
       colors: {
+        ahhar: {
+          'revenue-bg'  : '#EAF3DE',
+          'revenue-bd'  : '#C0DD97',
+          'revenue-lbl' : '#3B6D11',
+          'revenue-val' : '#27500A',
+          'kpi-bg'      : '#E6F1FB',
+          'kpi-bd'      : '#B5D4F4',
+          'kpi-lbl'     : '#185FA5',
+          'kpi-val'     : '#0C447C',
+          'rating-bg'   : '#FAEEDA',
+          'rating-bd'   : '#FAC775',
+          'rating-lbl'  : '#854F0B',
+          'rating-val'  : '#633806',
+          'insight-bg'  : '#EEEDFE',
+          'insight-bd'  : '#CECBF6',
+          'insight-txt' : '#3C3489',
+          'insight-icon': '#534AB7',
+          'alert-bg'    : '#FCEBEB',
+          'alert-bd'    : '#F7C1C1',
+          'alert-txt'   : '#A32D2D',
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

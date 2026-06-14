@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Percent, Save, Wifi, Usb, CheckCircle, Store, MapPin } from 'lucide-react';
 import { connectUSBPrinter } from '../../utils/printer';
+import SubscriptionPlans from '../owner/SubscriptionPlans';
 
 const Settings = () => {
   const { user } = useContext(AuthContext);
@@ -232,6 +233,11 @@ const Settings = () => {
             <Save size={18} className="mr-2" /> Save Geofence
           </Button>
         </div>
+      </div>
+      
+      {/* Subscription Plans Card */}
+      <div className="bg-white rounded-xl shadow-sm border p-6 mb-6">
+         <SubscriptionPlans />
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -70,9 +70,14 @@ export const CartProvider = ({ children }) => {
         }
         
         if (tableId) {
-          const sId = bill?.sessionId || session?._id || '';
-          const rId = bill?.restaurantId || session?.restaurantId || '';
-          window.location.href = `/menu/table/${tableId}/ended?sessionId=${sId}&restaurantId=${rId}`;
+          if (window.location.pathname.includes('/waiter/order')) {
+            // Do nothing; WaiterOrderHistory component handles the SPA navigation
+            return;
+          } else {
+            const sId = bill?.sessionId || session?._id || '';
+            const rId = bill?.restaurantId || session?.restaurantId || '';
+            window.location.href = `/menu/table/${tableId}/ended?sessionId=${sId}&restaurantId=${rId}`;
+          }
         }
       }
     }
@@ -91,8 +96,9 @@ export const CartProvider = ({ children }) => {
     }
   }, [session]);
 
-  const addToCart = async (item, quantity = 1, instructions = '', selectedModifiers = []) => {
-    if (!session?._id) return;
+  const addToCart = async (item, quantity = 1, instructions = '', selectedModifiers = [], activeSessionOverride = null) => {
+    const currentSession = activeSessionOverride || session;
+    if (!currentSession?._id) return;
     
     // Check if exactly same item is in cart
     const existingItem = cart.find(i => {
@@ -112,7 +118,7 @@ export const CartProvider = ({ children }) => {
         // Optimistic UI update
         setCart(prev => prev.map(i => i.cartItemId === existingItem.cartItemId ? { ...i, quantity: newQuantity } : i));
         
-        await axios.put(`/customer/session/${session._id}/cart/update`, {
+        await axios.put(`/customer/session/${currentSession._id}/cart/update`, {
           cartItemId: existingItem.cartItemId,
           quantity: newQuantity
         });
@@ -131,7 +137,7 @@ export const CartProvider = ({ children }) => {
         // Optimistic UI update
         setCart(prev => [...prev, newItem]);
         
-        await axios.post(`/customer/session/${session._id}/cart/add`, {
+        await axios.post(`/customer/session/${currentSession._id}/cart/add`, {
           cartItem: newItem
         });
       }

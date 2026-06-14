@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { LayoutDashboard, Users, TableProperties, Menu, X, Utensils, Settings, LogOut, Receipt, BarChart, Activity, BellRing, Search, Truck, ClipboardList, ChefHat, Check, QrCode, TrendingUp, Package, Printer } from 'lucide-react';
+import { LayoutDashboard, Users, TableProperties, Menu, X, Utensils, Settings, LogOut, Receipt, BarChart, Activity, BellRing, Search, Truck, ClipboardList, ChefHat, Check, QrCode, TrendingUp, Package, Printer, CreditCard } from 'lucide-react';
 import axios from '@/lib/axios';
 import ServiceNotifications from '../components/ServiceNotifications';
 
@@ -11,20 +11,25 @@ const DashboardLayout = () => {
   const [restaurantName, setRestaurantName] = useState('My Restaurant');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const [activePlan, setActivePlan] = useState('free');
+
   useEffect(() => {
-    const fetchRestaurant = async () => {
+    const fetchRestaurantAndPlan = async () => {
       try {
-        console.log('[DashboardLayout] Fetching restaurant details...');
         const res = await axios.get('/restaurant');
-        console.log('[DashboardLayout] Restaurant fetched:', res.data);
         if (res.data && res.data.name) {
           setRestaurantName(res.data.name);
         }
+        
+        const planRes = await axios.get('/subscriptions/plans');
+        if (planRes.data && planRes.data.success) {
+          setActivePlan(planRes.data.activePlan || 'free');
+        }
       } catch (err) {
-        console.error("[DashboardLayout] Failed to fetch restaurant details:", err.response?.status, err.message);
+        console.error("[DashboardLayout] Failed to fetch details:", err.message);
       }
     };
-    fetchRestaurant();
+    fetchRestaurantAndPlan();
 
     const handleUpdate = (e) => {
       if (e.detail && e.detail.name) {
@@ -36,31 +41,32 @@ const DashboardLayout = () => {
   }, []);
 
   const navItems = [
-    { name: 'Executive Dashboard', path: '/executive-dashboard', icon: <LayoutDashboard className="h-5 w-5" />, roles: ['admin', 'owner'] },
-    { name: 'Menu Management', path: '/menu', icon: <Utensils className="h-5 w-5" />, roles: ['admin', 'owner'] },
-    { name: 'Table Management', path: '/tables', icon: <Check className="h-5 w-5" />, roles: ['admin', 'owner'] },
-    { name: 'Billing & Payments', path: '/billing', icon: <Receipt className="h-5 w-5" />, roles: ['admin', 'owner', 'cashier'] },
+    { name: 'Executive Dashboard', path: '/executive-dashboard', icon: <LayoutDashboard className="h-5 w-5" />, roles: ['admin', 'owner'], plans: ['basic', 'standard', 'premium', 'free'] },
+    { name: 'Menu Management', path: '/menu', icon: <Utensils className="h-5 w-5" />, roles: ['admin', 'owner'], plans: ['basic', 'standard', 'premium', 'free'] },
+    { name: 'Table Management', path: '/tables', icon: <Check className="h-5 w-5" />, roles: ['admin', 'owner'], plans: ['basic', 'standard', 'premium', 'free'] },
+    { name: 'Staff Management', path: '/staff', icon: <Users className="h-5 w-5" />, roles: ['admin', 'owner'], plans: ['basic', 'standard', 'premium', 'free'] },
+    { name: 'Billing & Payments', path: '/billing', icon: <Receipt className="h-5 w-5" />, roles: ['admin', 'owner', 'cashier'], plans: ['basic', 'standard', 'premium', 'free'] },
     
     // BI & Analytics
-    { name: 'Revenue Analytics', path: '/analytics', icon: <BarChart className="h-5 w-5" />, roles: ['admin', 'owner'] },
-    { name: 'Customer Feedback BI', path: '/service-analytics', icon: <BarChart className="h-5 w-5" />, roles: ['admin', 'owner'] },
-    { name: 'Staff Performance BI', path: '/staff-analytics', icon: <Users className="h-5 w-5" />, roles: ['admin', 'owner'] },
+    { name: 'Revenue Analytics', path: '/analytics', icon: <BarChart className="h-5 w-5" />, roles: ['admin', 'owner'], plans: ['standard', 'premium'] },
+    { name: 'Customer Feedback BI', path: '/service-analytics', icon: <BarChart className="h-5 w-5" />, roles: ['admin', 'owner'], plans: ['standard', 'premium'] },
+    { name: 'Staff Performance BI', path: '/staff-analytics', icon: <Users className="h-5 w-5" />, roles: ['admin', 'owner'], plans: ['standard', 'premium'] },
     
     // Kitchen & Waiter
-    { name: 'Waitstaff Ops', path: '/waiter-ops', icon: <Users className="h-5 w-5" />, roles: ['admin', 'owner', 'waiter'] },
-    { name: 'Kitchen Ops', path: '/kitchen', icon: <Users className="h-5 w-5" />, roles: ['admin', 'owner'] },
+    { name: 'Waitstaff Ops', path: '/waiter-ops', icon: <Users className="h-5 w-5" />, roles: ['admin', 'owner', 'waiter'], plans: ['basic', 'standard', 'premium', 'free'] },
+    { name: 'Kitchen Ops', path: '/kitchen', icon: <Users className="h-5 w-5" />, roles: ['admin', 'owner'], plans: ['basic', 'standard', 'premium', 'free'] },
     
     // ERP & Inventory
-    { name: 'Inventory Master', path: '/inventory', icon: <Package className="h-5 w-5" />, roles: ['admin', 'owner', 'inventory_manager'] },
-    { name: 'Suppliers', path: '/suppliers', icon: <Truck className="h-5 w-5" />, roles: ['admin', 'owner', 'inventory_manager'] },
-    { name: 'Purchase Orders', path: '/purchase-orders', icon: <ClipboardList className="h-5 w-5" />, roles: ['admin', 'owner', 'inventory_manager'] },
-    { name: 'Recipe Maps', path: '/recipes', icon: <ChefHat className="h-5 w-5" />, roles: ['admin', 'owner', 'inventory_manager'] },
-    { name: 'Inventory Analytics', path: '/inventory-analytics', icon: <Search className="h-5 w-5" />, roles: ['admin', 'owner', 'inventory_manager'] },
-    { name: 'Categories', path: '/categories', icon: <Menu className="h-5 w-5" />, roles: ['admin', 'owner'] },
-    { name: 'Settings', path: '/profile', icon: <Settings className="h-5 w-5" />, roles: ['admin', 'owner'] },
+    { name: 'Inventory Master', path: '/inventory', icon: <Package className="h-5 w-5" />, roles: ['admin', 'owner', 'inventory_manager'], plans: ['standard', 'premium'] },
+    { name: 'Suppliers', path: '/suppliers', icon: <Truck className="h-5 w-5" />, roles: ['admin', 'owner', 'inventory_manager'], plans: ['standard', 'premium'] },
+    { name: 'Purchase Orders', path: '/purchase-orders', icon: <ClipboardList className="h-5 w-5" />, roles: ['admin', 'owner', 'inventory_manager'], plans: ['standard', 'premium'] },
+    { name: 'Recipe Maps', path: '/recipes', icon: <ChefHat className="h-5 w-5" />, roles: ['admin', 'owner', 'inventory_manager'], plans: ['standard', 'premium'] },
+    { name: 'Inventory Analytics', path: '/inventory-analytics', icon: <Search className="h-5 w-5" />, roles: ['admin', 'owner', 'inventory_manager'], plans: ['standard', 'premium'] },
+    { name: 'Categories', path: '/categories', icon: <Menu className="h-5 w-5" />, roles: ['admin', 'owner'], plans: ['basic', 'standard', 'premium', 'free'] },
+    { name: 'Settings', path: '/profile', icon: <Settings className="h-5 w-5" />, roles: ['admin', 'owner'], plans: ['basic', 'standard', 'premium', 'free'] },
   ];
 
-  const filteredNavItems = navItems.filter(item => item.roles.includes(user?.role));
+  const roleFilteredNavItems = navItems.filter(item => item.roles.includes(user?.role));
 
   return (
     <div className="flex h-screen w-full bg-background text-foreground overflow-hidden">
@@ -89,21 +95,31 @@ const DashboardLayout = () => {
         </div>
         <div className="flex-1 overflow-auto py-4 hide-scrollbar">
           <nav className="grid items-start px-4 text-sm font-medium gap-1.5">
-            {filteredNavItems.map((item) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`flex items-center gap-3 rounded-md px-3 py-2.5 transition-all duration-200 ${
-                  location.pathname === item.path 
-                    ? 'bg-foreground text-background font-semibold' 
-                    : 'text-muted-foreground hover:text-foreground hover:bg-foreground/5'
-                }`}
-              >
-                {item.icon}
-                {item.name}
-              </Link>
-            ))}
+            {roleFilteredNavItems.map((item) => {
+              const isLocked = item.plans && !item.plans.includes(activePlan);
+
+              return (
+                <Link
+                  key={item.name}
+                  to={isLocked ? '#' : item.path}
+                  onClick={(e) => {
+                    if (isLocked) e.preventDefault();
+                    else setIsMobileMenuOpen(false);
+                  }}
+                  className={`flex items-center gap-3 rounded-md px-3 py-2.5 transition-all duration-200 ${
+                    location.pathname === item.path && !isLocked
+                      ? 'bg-foreground text-background font-semibold' 
+                      : 'text-muted-foreground hover:text-foreground hover:bg-foreground/5'
+                  } ${isLocked ? 'opacity-50 cursor-not-allowed hover:bg-transparent hover:text-muted-foreground' : ''}`}
+                >
+                  {item.icon}
+                  <span className="flex-1">{item.name}</span>
+                  {isLocked && <div className="ml-auto flex items-center justify-center text-gray-400" title="Feature locked on current plan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>}
+                </Link>
+              );
+            })}
           </nav>
         </div>
         <div className="mt-auto p-4 border-t border-border">
@@ -140,7 +156,7 @@ const DashboardLayout = () => {
           <div className="flex items-center gap-4 flex-1 justify-end">
             <ServiceNotifications />
             <div className="hidden sm:flex items-center gap-2 border border-border rounded-full px-3 py-1 bg-background text-xs font-medium">
-              <span className="h-2 w-2 rounded-full bg-[#22c55e]"></span>
+              <span className="h-2 w-2 rounded-full bg-[#4ade80]"></span>
               System Active
             </div>
           </div>

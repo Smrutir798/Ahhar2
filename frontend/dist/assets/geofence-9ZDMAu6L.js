@@ -1,0 +1,1 @@
+var e=(e,t,n,r)=>{let i=e*Math.PI/180,a=n*Math.PI/180,o=(n-e)*Math.PI/180,s=(r-t)*Math.PI/180,c=Math.sin(o/2)*Math.sin(o/2)+Math.cos(i)*Math.cos(a)*Math.sin(s/2)*Math.sin(s/2);return 6371e3*(2*Math.atan2(Math.sqrt(c),Math.sqrt(1-c)))};export{e as calculateDistance};
