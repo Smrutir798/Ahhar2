@@ -18,5 +18,6 @@ router.use(restrictToAdminOrOwner);
 router.get('/', staffController.getStaff);
 router.post('/', staffController.createStaff);
 router.delete('/:id', staffController.deleteStaff);
+router.put('/:id/password', staffController.resetStaffPassword);
 
 module.exports = router;
