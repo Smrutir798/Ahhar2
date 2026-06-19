@@ -5,21 +5,32 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
-import { UserPlus, Trash2, Phone, Shield, User, Key, Users, Search } from 'lucide-react';
+import { UserPlus, Trash2, Phone, Shield, User, Key, Users, Search, ChefHat } from 'lucide-react';
 
 const StaffManagement = () => {
   const { user } = useContext(AuthContext);
   const [staffList, setStaffList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [form, setForm] = useState({
+  const [generalForm, setGeneralForm] = useState({
     name: '',
     phone: '',
     password: '',
     role: 'waiter'
   });
+  const [kitchenForm, setKitchenForm] = useState({
+    name: '',
+    phone: '',
+    password: ''
+  });
   const [submitting, setSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [resetModal, setResetModal] = useState({
+    isOpen: false,
+    staffId: '',
+    staffName: '',
+    newPassword: ''
+  });
 
   const filteredStaff = staffList.filter((member) => {
     const query = searchQuery.toLowerCase();
@@ -52,24 +63,47 @@ const StaffManagement = () => {
     fetchStaff();
   }, []);
 
-  const handleInputChange = (e) => {
+  const handleGeneralInputChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setGeneralForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleKitchenInputChange = (e) => {
+    const { name, value } = e.target;
+    setKitchenForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleGeneralSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     setError('');
     try {
-      await axios.post('/staff', form);
+      await axios.post('/staff', generalForm);
       // Reset form
-      setForm({ name: '', phone: '', password: '', role: 'waiter' });
+      setGeneralForm({ name: '', phone: '', password: '', role: 'waiter' });
       // Refresh list
       fetchStaff();
     } catch (err) {
       console.error('Failed to enroll staff:', err);
       setError(err.response?.data?.message || 'Failed to enroll staff member. Please check details.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleKitchenSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError('');
+    try {
+      await axios.post('/staff', { ...kitchenForm, role: 'kitchen' });
+      // Reset form
+      setKitchenForm({ name: '', phone: '', password: '' });
+      // Refresh list
+      fetchStaff();
+    } catch (err) {
+      console.error('Failed to enroll kitchen staff:', err);
+      setError(err.response?.data?.message || 'Failed to enroll kitchen staff member. Please check details.');
     } finally {
       setSubmitting(false);
     }
@@ -83,6 +117,23 @@ const StaffManagement = () => {
     } catch (err) {
       console.error('Failed to remove staff:', err);
       alert(err.response?.data?.message || 'Failed to remove staff member.');
+    }
+  };
+
+  const handlePasswordResetSubmit = async () => {
+    const { staffId, staffName, newPassword } = resetModal;
+    if (newPassword.trim().length < 6) {
+      alert("Password must be at least 6 characters long.");
+      return;
+    }
+    
+    try {
+      await axios.put(`/staff/${staffId}/password`, { password: newPassword.trim() });
+      setResetModal({ isOpen: false, staffId: '', staffName: '', newPassword: '' });
+      alert(`Password for ${staffName} has been reset successfully.`);
+    } catch (err) {
+      console.error('Failed to reset staff password:', err);
+      alert(err.response?.data?.message || 'Failed to reset password.');
     }
   };
 
@@ -122,109 +173,193 @@ const StaffManagement = () => {
       )}
 
       <div className="grid gap-8 grid-cols-1 lg:grid-cols-3">
-        {/* Enroll Form */}
-        <Card className="bg-white shadow-sm border border-gray-200/60 rounded-[24px] overflow-hidden h-fit">
-          <CardHeader className="p-6 pb-4 bg-gray-50/50 border-b border-gray-100">
-            <CardTitle className="text-lg font-bold text-black flex items-center gap-2">
-              <UserPlus size={18} className="text-gray-500" />
-              Enroll New Staff
-            </CardTitle>
-            <CardDescription className="text-xs text-gray-500">
-              Create an account for waitstaff, kitchen staff, cashiers, or inventory managers.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name" className="text-xs font-bold text-gray-700">Full Name</Label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                    <User size={16} />
-                  </span>
-                  <Input
-                    id="name"
-                    name="name"
-                    type="text"
-                    required
-                    className="bg-gray-50 border-gray-200 focus-visible:ring-black h-10 pl-10 rounded-xl"
-                    placeholder="e.g. John Doe"
-                    value={form.name}
-                    onChange={handleInputChange}
-                  />
+        {/* Sidebar Column: Forms */}
+        <div className="space-y-6 lg:col-span-1">
+          {/* Enroll General Staff Form */}
+          <Card className="bg-white shadow-sm border border-gray-200/60 rounded-[24px] overflow-hidden h-fit">
+            <CardHeader className="p-6 pb-4 bg-gray-50/50 border-b border-gray-100">
+              <CardTitle className="text-lg font-bold text-black flex items-center gap-2">
+                <UserPlus size={18} className="text-gray-500" />
+                Enroll New Staff
+              </CardTitle>
+              <CardDescription className="text-xs text-gray-500">
+                Create an account for waitstaff, cashiers, or inventory managers.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              <form onSubmit={handleGeneralSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="gen-name" className="text-xs font-bold text-gray-700">Full Name</Label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                      <User size={16} />
+                    </span>
+                    <Input
+                      id="gen-name"
+                      name="name"
+                      type="text"
+                      required
+                      className="bg-gray-50 border-gray-200 focus-visible:ring-black h-10 pl-10 rounded-xl"
+                      placeholder="e.g. John Doe"
+                      value={generalForm.name}
+                      onChange={handleGeneralInputChange}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="phone" className="text-xs font-bold text-gray-700">Phone Number</Label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                    <Phone size={16} />
-                  </span>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    required
-                    className="bg-gray-50 border-gray-200 focus-visible:ring-black h-10 pl-10 rounded-xl"
-                    placeholder="e.g. 9876543210"
-                    value={form.phone}
-                    onChange={handleInputChange}
-                  />
+                <div className="space-y-2">
+                  <Label htmlFor="gen-phone" className="text-xs font-bold text-gray-700">Phone Number</Label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                      <Phone size={16} />
+                    </span>
+                    <Input
+                      id="gen-phone"
+                      name="phone"
+                      type="tel"
+                      required
+                      className="bg-gray-50 border-gray-200 focus-visible:ring-black h-10 pl-10 rounded-xl"
+                      placeholder="e.g. 9876543210"
+                      value={generalForm.phone}
+                      onChange={handleGeneralInputChange}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-xs font-bold text-gray-700">Password</Label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                    <Key size={16} />
-                  </span>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    required
-                    minLength={6}
-                    className="bg-gray-50 border-gray-200 focus-visible:ring-black h-10 pl-10 rounded-xl"
-                    placeholder="Min 6 characters"
-                    value={form.password}
-                    onChange={handleInputChange}
-                  />
+                <div className="space-y-2">
+                  <Label htmlFor="gen-password" className="text-xs font-bold text-gray-700">Password</Label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                      <Key size={16} />
+                    </span>
+                    <Input
+                      id="gen-password"
+                      name="password"
+                      type="password"
+                      required
+                      minLength={6}
+                      className="bg-gray-50 border-gray-200 focus-visible:ring-black h-10 pl-10 rounded-xl"
+                      placeholder="Min 6 characters"
+                      value={generalForm.password}
+                      onChange={handleGeneralInputChange}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="role" className="text-xs font-bold text-gray-700">Assigned Role</Label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                    <Shield size={16} />
-                  </span>
-                  <select
-                    id="role"
-                    name="role"
-                    required
-                    className="w-full bg-gray-50 border border-gray-200 focus-visible:ring-black h-10 pl-10 pr-4 rounded-xl text-sm font-sans focus:outline-none focus:ring-2 focus:ring-black/10 transition-all"
-                    value={form.role}
-                    onChange={handleInputChange}
-                  >
-                    <option value="waiter">Waiter</option>
-                    <option value="kitchen">Kitchen Staff</option>
-                    <option value="cashier">Cashier</option>
-                    <option value="inventory_manager">Inventory Manager</option>
-                  </select>
+                <div className="space-y-2">
+                  <Label htmlFor="gen-role" className="text-xs font-bold text-gray-700">Assigned Role</Label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                      <Shield size={16} />
+                    </span>
+                    <select
+                      id="gen-role"
+                      name="role"
+                      required
+                      className="w-full bg-gray-50 border border-gray-200 focus-visible:ring-black h-10 pl-10 pr-4 rounded-xl text-sm font-sans focus:outline-none focus:ring-2 focus:ring-black/10 transition-all"
+                      value={generalForm.role}
+                      onChange={handleGeneralInputChange}
+                    >
+                      <option value="waiter">Waiter</option>
+                      <option value="cashier">Cashier</option>
+                      <option value="inventory_manager">Inventory Manager</option>
+                    </select>
+                  </div>
                 </div>
-              </div>
 
-              <Button
-                type="submit"
-                disabled={submitting}
-                className="w-full h-11 bg-black text-white hover:bg-gray-900 active:scale-95 transition-all rounded-xl shadow-md font-bold text-sm mt-2 flex items-center justify-center gap-2"
-              >
-                {submitting ? 'Enrolling...' : 'Enroll Staff'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+                <Button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full h-11 bg-black text-white hover:bg-gray-900 active:scale-95 transition-all rounded-xl shadow-md font-bold text-sm mt-2 flex items-center justify-center gap-2"
+                >
+                  {submitting ? 'Enrolling...' : 'Enroll Staff'}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Enroll Kitchen Staff Form */}
+          <Card className="bg-white shadow-sm border border-gray-200/60 rounded-[24px] overflow-hidden h-fit">
+            <CardHeader className="p-6 pb-4 bg-gray-50/50 border-b border-gray-100">
+              <CardTitle className="text-lg font-bold text-black flex items-center gap-2">
+                <ChefHat size={18} className="text-gray-500" />
+                Enroll Kitchen Staff
+              </CardTitle>
+              <CardDescription className="text-xs text-gray-500">
+                Create a dedicated account for chefs and kitchen staff.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              <form onSubmit={handleKitchenSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="kit-name" className="text-xs font-bold text-gray-700">Full Name</Label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                      <User size={16} />
+                    </span>
+                    <Input
+                      id="kit-name"
+                      name="name"
+                      type="text"
+                      required
+                      className="bg-gray-50 border-gray-200 focus-visible:ring-black h-10 pl-10 rounded-xl"
+                      placeholder="e.g. John Chef"
+                      value={kitchenForm.name}
+                      onChange={handleKitchenInputChange}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="kit-phone" className="text-xs font-bold text-gray-700">Phone Number</Label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                      <Phone size={16} />
+                    </span>
+                    <Input
+                      id="kit-phone"
+                      name="phone"
+                      type="tel"
+                      required
+                      className="bg-gray-50 border-gray-200 focus-visible:ring-black h-10 pl-10 rounded-xl"
+                      placeholder="e.g. 9876543211"
+                      value={kitchenForm.phone}
+                      onChange={handleKitchenInputChange}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="kit-password" className="text-xs font-bold text-gray-700">Password</Label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                      <Key size={16} />
+                    </span>
+                    <Input
+                      id="kit-password"
+                      name="password"
+                      type="password"
+                      required
+                      minLength={6}
+                      className="bg-gray-50 border-gray-200 focus-visible:ring-black h-10 pl-10 rounded-xl"
+                      placeholder="Min 6 characters"
+                      value={kitchenForm.password}
+                      onChange={handleKitchenInputChange}
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full h-11 bg-black text-white hover:bg-gray-900 active:scale-95 transition-all rounded-xl shadow-md font-bold text-sm mt-2 flex items-center justify-center gap-2"
+                >
+                  {submitting ? 'Enrolling Chef...' : 'Enroll Kitchen Staff'}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Staff List */}
         <Card className="bg-white shadow-sm border border-gray-200/60 rounded-[24px] overflow-hidden lg:col-span-2">
@@ -289,13 +424,24 @@ const StaffManagement = () => {
                         <td className="py-4 px-4 text-gray-600 font-medium">{member.phone || member.email || 'N/A'}</td>
                         <td className="py-4 px-4">{getRoleBadge(member.role)}</td>
                         <td className="py-4 px-4 text-right">
-                          <Button
-                            variant="outline"
-                            className="h-9 w-9 p-0 text-red-500 hover:text-white hover:bg-red-500 border-gray-100 hover:border-red-500 shadow-sm transition-all rounded-xl ml-auto"
-                            onClick={() => handleDelete(member._id, member.name)}
-                          >
-                            <Trash2 size={16} />
-                          </Button>
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              title="Reset Password"
+                              className="h-9 w-9 p-0 text-amber-500 hover:text-white hover:bg-amber-500 border-gray-100 hover:border-amber-500 shadow-sm transition-all rounded-xl"
+                              onClick={() => setResetModal({ isOpen: true, staffId: member._id, staffName: member.name, newPassword: '' })}
+                            >
+                              <Key size={16} />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              title="Remove Staff"
+                              className="h-9 w-9 p-0 text-red-500 hover:text-white hover:bg-red-500 border-gray-100 hover:border-red-500 shadow-sm transition-all rounded-xl"
+                              onClick={() => handleDelete(member._id, member.name)}
+                            >
+                              <Trash2 size={16} />
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -306,6 +452,52 @@ const StaffManagement = () => {
           </CardContent>
         </Card>
       </div>
+      {/* Reset Password Modal */}
+      {resetModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <Card className="bg-white shadow-xl border border-gray-200 w-full max-w-md rounded-2xl overflow-hidden animate-scale-in">
+            <CardHeader className="bg-gray-50 p-6 border-b border-gray-100">
+              <CardTitle className="text-lg font-bold text-black flex items-center gap-2">
+                <Key size={18} className="text-amber-500" />
+                Reset Staff Password
+              </CardTitle>
+              <CardDescription className="text-xs text-gray-500">
+                Change the password for <span className="font-bold text-black">{resetModal.staffName}</span>.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="reset-password-input" className="text-xs font-bold text-gray-700">New Password</Label>
+                <Input
+                  id="reset-password-input"
+                  type="password"
+                  required
+                  minLength={6}
+                  placeholder="Enter at least 6 characters"
+                  value={resetModal.newPassword}
+                  onChange={(e) => setResetModal(prev => ({ ...prev, newPassword: e.target.value }))}
+                  className="bg-gray-50 border-gray-200 focus-visible:ring-black h-10 rounded-xl"
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setResetModal({ isOpen: false, staffId: '', staffName: '', newPassword: '' })}
+                  className="rounded-xl border-gray-200 text-gray-600 hover:bg-gray-50 h-10"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handlePasswordResetSubmit}
+                  className="rounded-xl bg-black text-white hover:bg-gray-900 h-10 px-4 font-bold"
+                >
+                  Save Password
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

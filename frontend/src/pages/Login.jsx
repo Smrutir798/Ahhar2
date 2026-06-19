@@ -11,6 +11,8 @@ import { ArrowRight } from 'lucide-react';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loginRole, setLoginRole] = useState('admin'); // 'admin', 'kitchen', 'waiter'
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { login, user } = useContext(AuthContext);
   const navigate = useNavigate();
   const [error, setError] = useState('');
@@ -40,6 +42,20 @@ const Login = () => {
         setError('Login failed: No token received');
         return;
       }
+
+      // Enforce selected role matching (owner/admin are allowed to bypass validation for testing/management)
+      if (loginRole === 'kitchen' && user.role !== 'kitchen' && !['admin', 'owner'].includes(user.role)) {
+        setError('Access denied: You are not registered as Kitchen staff.');
+        return;
+      }
+      if (loginRole === 'waiter' && user.role !== 'waiter' && !['admin', 'owner'].includes(user.role)) {
+        setError('Access denied: You are not registered as Waiter staff.');
+        return;
+      }
+      if (loginRole === 'admin' && !['admin', 'owner', 'thinkdifferent'].includes(user.role)) {
+        setError('Access denied: Owner/Admin credentials expected.');
+        return;
+      }
       
       console.log('[Login] Token received, calling login() function');
       login(user, token);
@@ -48,12 +64,12 @@ const Login = () => {
       let navigationPath = '/';
       if (user?.role === 'thinkdifferent') {
         navigationPath = '/thinkdifferent';
+      } else if (loginRole === 'kitchen' || user?.role === 'kitchen') {
+        navigationPath = '/kitchen';
+      } else if (loginRole === 'waiter' || user?.role === 'waiter') {
+        navigationPath = '/waiter-ops';
       } else if (['admin', 'owner'].includes(user?.role)) {
         navigationPath = '/executive-dashboard';
-      } else if (user?.role === 'kitchen') {
-        navigationPath = '/kitchen';
-      } else if (user?.role === 'waiter') {
-        navigationPath = '/waiter-ops';
       }
       
       console.log('[Login] Will navigate to:', navigationPath);
@@ -62,6 +78,18 @@ const Login = () => {
       console.error('[Login] Error:', err);
       setError(err.response?.data?.message || 'Login failed');
     }
+  };
+
+  const getEmailPlaceholder = () => {
+    if (loginRole === 'admin') return 'owner@thinkdifferent.com or 9876543210';
+    if (loginRole === 'kitchen') return 'e.g. 9876543210 (Kitchen phone)';
+    if (loginRole === 'waiter') return 'e.g. 9876543210 (Waiter phone)';
+    return 'Enter credentials';
+  };
+
+  const getEmailLabel = () => {
+    if (loginRole === 'admin') return 'Email or Phone Number';
+    return 'Phone Number';
   };
 
   return (
@@ -79,17 +107,69 @@ const Login = () => {
           <form onSubmit={handleLogin} className="grid gap-5 font-sans">
             {error && <div className="text-red-500 text-sm font-medium text-center">{error}</div>}
             
+            <div className="relative">
+              <Label className="text-[11px] uppercase tracking-wider font-bold text-foreground block mb-1.5">Login Role</Label>
+              <button
+                type="button"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex w-full h-12 items-center justify-between rounded-sm border border-border/60 bg-white px-3.5 text-sm shadow-sm hover:bg-gray-50/50 transition-all font-sans font-medium text-foreground focus:outline-none"
+              >
+                <span className="flex items-center gap-2">
+                  {loginRole === 'admin' && <span>👑 Owner / Admin</span>}
+                  {loginRole === 'kitchen' && <span>🍳 Kitchen Staff</span>}
+                  {loginRole === 'waiter' && <span>📋 Waiter Staff</span>}
+                </span>
+                <svg
+                  className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {isDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setIsDropdownOpen(false)} />
+                  <div className="absolute z-20 mt-1.5 w-full rounded-md border border-border/50 bg-white p-1.5 shadow-lg animate-in fade-in slide-in-from-top-2 duration-200">
+                    <button
+                      type="button"
+                      onClick={() => { setLoginRole('admin'); setIsDropdownOpen(false); }}
+                      className={`flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm transition-colors font-sans text-left ${loginRole === 'admin' ? 'bg-black text-white font-semibold' : 'text-foreground hover:bg-muted/50'}`}
+                    >
+                      👑 Owner / Admin
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setLoginRole('kitchen'); setIsDropdownOpen(false); }}
+                      className={`flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm transition-colors font-sans text-left ${loginRole === 'kitchen' ? 'bg-black text-white font-semibold' : 'text-foreground hover:bg-muted/50'}`}
+                    >
+                      🍳 Kitchen Staff
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setLoginRole('waiter'); setIsDropdownOpen(false); }}
+                      className={`flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm transition-colors font-sans text-left ${loginRole === 'waiter' ? 'bg-black text-white font-semibold' : 'text-foreground hover:bg-muted/50'}`}
+                    >
+                      📋 Waiter Staff
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
             <div className="grid gap-1.5">
-              <Label htmlFor="email" className="text-[11px] uppercase tracking-wider font-bold text-foreground">Email or Phone Number</Label>
-              <Input id="email" type="text" placeholder="owner@thinkdifferent.com or 9876543210" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12 rounded-lg border-border/60 bg-white shadow-sm" />
+              <Label htmlFor="email" className="text-[11px] uppercase tracking-wider font-bold text-foreground">{getEmailLabel()}</Label>
+              <Input id="email" type="text" placeholder={getEmailPlaceholder()} value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12 rounded-sm border-border/60 bg-white shadow-sm" />
             </div>
             
             <div className="grid gap-1.5">
               <Label htmlFor="password" className="text-[11px] uppercase tracking-wider font-bold text-foreground">Password</Label>
-              <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="h-12 rounded-lg border-border/60 bg-white shadow-sm" />
+              <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="h-12 rounded-sm border-border/60 bg-white shadow-sm" />
             </div>
             
-            <Button type="submit" className="w-full h-12 text-[15px] font-medium rounded-lg mt-3 bg-black text-white hover:bg-black/90 flex items-center justify-center gap-2">
+            <Button type="submit" className="w-full h-12 text-[15px] font-medium rounded-sm mt-3 bg-black text-white hover:bg-black/90 flex items-center justify-center gap-2">
               Sign In <ArrowRight className="h-4 w-4" />
             </Button>
           </form>

@@ -4,7 +4,51 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
-import { Trash2 } from 'lucide-react';
+import { Trash2, FileSpreadsheet, Upload } from 'lucide-react';
+
+const parseMenuCSV = (text) => {
+  const lines = text.split(/\r?\n/);
+  const result = [];
+  let startIndex = 0;
+  if (lines[0] && (lines[0].toLowerCase().includes('name') || lines[0].toLowerCase().includes('dish') || lines[0].toLowerCase().includes('price'))) {
+    startIndex = 1;
+  }
+  
+  for (let i = startIndex; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    
+    const columns = [];
+    let current = '';
+    let inQuotes = false;
+    for (let c = 0; c < line.length; c++) {
+      const char = line[c];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        columns.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    columns.push(current.trim());
+    
+    // Columns: name, category, price, description, image
+    const name = columns[0] ? columns[0].replace(/^"|"$/g, '').trim() : '';
+    const category = columns[1] ? columns[1].replace(/^"|"$/g, '').trim() : '';
+    const priceStr = columns[2] ? columns[2].replace(/^"|"$/g, '').trim() : '';
+    const description = columns[3] ? columns[3].replace(/^"|"$/g, '').trim() : '';
+    const image = columns[4] ? columns[4].replace(/^"|"$/g, '').trim() : '';
+    
+    const price = parseFloat(priceStr);
+    
+    if (name && category && !isNaN(price)) {
+      result.push({ name, category, price, description, image });
+    }
+  }
+  return result;
+};
 
 const Menu = () => {
   const [menuItems, setMenuItems] = useState([]);
@@ -12,6 +56,10 @@ const Menu = () => {
   const [newItem, setNewItem] = useState({
     name: '', description: '', price: '', image: '', categoryId: ''
   });
+  const [uploadFile, setUploadFile] = useState(null);
+  const [parsedData, setParsedData] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const [csvError, setCsvError] = useState('');
 
   const fetchData = async () => {
     try {
@@ -65,6 +113,84 @@ const Menu = () => {
     }
   };
 
+  const handleCSVUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadFile(file);
+    setCsvError('');
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target.result;
+        const parsed = parseMenuCSV(text);
+        if (parsed.length === 0) {
+          setCsvError('No valid dishes found in the CSV file. Expected columns: name, category, price, description, image.');
+        } else {
+          setParsedData(parsed);
+        }
+      } catch (err) {
+        console.error(err);
+        setCsvError('Error parsing CSV file.');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleClearCSV = () => {
+    setUploadFile(null);
+    setParsedData([]);
+    setCsvError('');
+  };
+
+  const handleImportCSV = async () => {
+    if (parsedData.length === 0) return;
+    setUploading(true);
+    setCsvError('');
+    try {
+      // Map existing categories to IDs
+      const categoryMap = {};
+      categories.forEach(cat => {
+        categoryMap[cat.name.toLowerCase()] = cat._id;
+      });
+
+      // Sequential import to correctly create categories on the fly
+      for (const item of parsedData) {
+        let categoryId = categoryMap[item.category.toLowerCase()];
+        
+        if (!categoryId) {
+          try {
+            console.log(`Creating category on the fly: ${item.category}`);
+            const catRes = await axios.post('/categories', { name: item.category });
+            categoryId = catRes.data._id;
+            categoryMap[item.category.toLowerCase()] = categoryId;
+            setCategories(prev => [...prev, catRes.data]);
+          } catch (catErr) {
+            console.error('Failed to create category on the fly:', catErr);
+            throw new Error(`Failed to create category: ${item.category}`);
+          }
+        }
+
+        await axios.post('/menu', {
+          name: item.name,
+          categoryId,
+          price: item.price,
+          description: item.description || '',
+          image: item.image || ''
+        });
+      }
+
+      fetchData();
+      handleClearCSV();
+      alert('Bulk menu items imported successfully!');
+    } catch (err) {
+      console.error(err);
+      setCsvError(err.message || 'Failed to import some menu items. Please check CSV format.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in text-foreground pb-12">
       <div className="flex flex-col gap-4">
@@ -110,6 +236,74 @@ const Menu = () => {
                 </Button>
               </div>
             </form>
+          </CardContent>
+        </Card>
+
+        {/* Bulk Import Menu Items */}
+        <Card className="bg-white shadow-sm border border-gray-200/60 rounded-[16px] overflow-hidden w-full">
+          <div className="p-2.5 px-4 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
+            <span className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center gap-2">
+              <FileSpreadsheet className="h-4 w-4 text-black" />
+              Bulk Import Menu Items (CSV)
+            </span>
+          </div>
+          <CardContent className="p-4 space-y-4">
+            {csvError && <div className="text-red-500 text-xs font-semibold">{csvError}</div>}
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+              {/* Dropzone */}
+              <div className="border-2 border-dashed border-gray-200 hover:border-black/20 rounded-2xl p-5 text-center cursor-pointer transition-all relative group flex flex-col items-center justify-center min-h-[120px]">
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={handleCSVUpload}
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  disabled={uploading}
+                />
+                <Upload className="h-6 w-6 text-gray-400 group-hover:text-black transition-colors mb-2" />
+                <p className="text-xs font-bold text-gray-600">{uploadFile ? uploadFile.name : 'Choose CSV file'}</p>
+                <p className="text-[10px] text-gray-400 mt-1">Expected format: name, category, price, description, image</p>
+              </div>
+
+              {/* Parsed List Preview */}
+              {parsedData.length > 0 && (
+                <div className="md:col-span-2 space-y-3 animate-fade-in font-sans">
+                  <div className="bg-gray-50 rounded-xl p-3 max-h-32 overflow-y-auto text-xs space-y-1">
+                    <p className="font-bold text-gray-500 mb-1.5">Parsed Items ({parsedData.length}):</p>
+                    {parsedData.map((item, idx) => (
+                      <div key={idx} className="flex justify-between border-b border-gray-100 pb-1 items-center gap-2">
+                        <div>
+                          <span className="font-bold text-black">{item.name}</span>
+                          <span className="ml-2 text-[9px] bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">{item.category}</span>
+                        </div>
+                        <div className="flex gap-4 items-center">
+                          <span className="text-gray-500 font-medium truncate max-w-[120px]">{item.description || 'No description'}</span>
+                          <span className="font-bold text-black">₹{item.price}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex justify-end gap-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={handleClearCSV}
+                      className="rounded-lg text-gray-600 border-gray-200 h-9 font-bold text-xs"
+                      disabled={uploading}
+                    >
+                      Clear
+                    </Button>
+                    <Button 
+                      onClick={handleImportCSV} 
+                      className="rounded-lg bg-black text-white font-bold text-xs h-9 px-4"
+                      disabled={uploading}
+                    >
+                      {uploading ? 'Importing Items...' : 'Import All Items'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>

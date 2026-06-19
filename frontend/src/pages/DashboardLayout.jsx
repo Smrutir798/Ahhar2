@@ -45,7 +45,7 @@ const DashboardLayout = () => {
     { name: 'Menu Management', path: '/menu', icon: <Utensils className="h-5 w-5" />, roles: ['admin', 'owner'], plans: ['basic', 'standard', 'premium', 'free'] },
     { name: 'Table Management', path: '/tables', icon: <Check className="h-5 w-5" />, roles: ['admin', 'owner'], plans: ['basic', 'standard', 'premium', 'free'] },
     { name: 'Staff Management', path: '/staff', icon: <Users className="h-5 w-5" />, roles: ['admin', 'owner'], plans: ['basic', 'standard', 'premium', 'free'] },
-    { name: 'Billing & Payments', path: '/billing', icon: <Receipt className="h-5 w-5" />, roles: ['admin', 'owner', 'cashier'], plans: ['basic', 'standard', 'premium', 'free'] },
+    { name: 'Billing & Payments', path: '/billing', icon: <Receipt className="h-5 w-5" />, roles: ['admin', 'owner', 'cashier', 'waiter'], plans: ['basic', 'standard', 'premium', 'free'] },
     
     // BI & Analytics
     { name: 'Revenue Analytics', path: '/analytics', icon: <BarChart className="h-5 w-5" />, roles: ['admin', 'owner'], plans: ['standard', 'premium'] },
@@ -54,7 +54,6 @@ const DashboardLayout = () => {
     
     // Kitchen & Waiter
     { name: 'Waitstaff Ops', path: '/waiter-ops', icon: <Users className="h-5 w-5" />, roles: ['admin', 'owner', 'waiter'], plans: ['basic', 'standard', 'premium', 'free'] },
-    { name: 'Kitchen Ops', path: '/kitchen', icon: <Users className="h-5 w-5" />, roles: ['admin', 'owner'], plans: ['basic', 'standard', 'premium', 'free'] },
     
     // ERP & Inventory
     { name: 'Inventory Master', path: '/inventory', icon: <Package className="h-5 w-5" />, roles: ['admin', 'owner', 'inventory_manager'], plans: ['standard', 'premium'] },
